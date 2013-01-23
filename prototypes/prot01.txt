@@ -1,0 +1,41 @@
+window
+{
+	origin = -800.0 -450.0 0.0
+	dimensions = 1600.0 900.0 0.0
+}
+
+eye
+{
+	origin = 0.0 0.0 -1000.0
+}
+
+frame
+{	
+	dimensions = 320 200
+}
+
+scene
+{
+	color = 128 128 128 255
+	enviroment_intensity = 0.15
+	
+	object = light
+	{
+		color = 255 255 255 255
+		origin = -300.0 0.0 -400.0		
+		intensity = 1.0
+		attenuation = 1.0 0.0 0.0
+	}
+	
+	object = sphere
+	{
+		color = 0 255 0 255
+		enviroment_k = 1.0
+		difuse_k = 1.0
+		specular_k = 0.8
+		specular_n = 4
+		
+		origin = 0.0 0.0 0.0
+		radius = 200.0
+	}
+}
