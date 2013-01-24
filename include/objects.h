@@ -1,6 +1,7 @@
 #ifndef __OBJECTS_H
 #define __OBJECTS_H
 
+#include <math.h>
 #include <stdlib.h>
 #include "vector.h"
 #include "list.h"
@@ -50,6 +51,16 @@ typedef struct {
 } tsphere;
 
 typedef struct {
+	tvector3d anchor;
+	tvector3d direction;
+	tscalar radius;
+	tscalar radius2;
+	tscalar h1;
+	tscalar h2;
+	void (*coeficientsf)(tscalar, tscalar, tscalar, tscalar, tscalar, tscalar *, tscalar *, tscalar *);
+} tcylinder;
+
+typedef struct {
 	tvector4d bkcolor;
 	tscalar env_intensity;
 	tlist objects;
@@ -79,10 +90,11 @@ void tsphere_intersections (void* properties, tvector3d origin, tvector3d direct
 tvector3d tsphere_normal (void* properties, tvector3d point);
 
 // cylinder functions
-tsphere * tsphere_new();
-tsphere tsphere_init(tvector3d anchor, tscalar radius);
-void tsphere_intersections (void* properties, tvector3d origin, tvector3d direction, long *count, tscalar *distances);
-tvector3d tsphere_normal (void* properties, tvector3d point);
+tcylinder * tcylinder_new();
+void tcylinder_init(tcylinder *cyl, tvector3d anchor, tvector3d direction, tscalar radius, tscalar h1, tscalar h2);
+void tcylinder_with_coeficients(tscalar radius2, tscalar ID, tscalar IX, tscalar DX, tscalar k, tscalar *A, tscalar *b, tscalar *C);
+void tcylinder_intersections (void* properties, tvector3d origin, tvector3d direction, long *count, tscalar *distances);
+tvector3d tcylinder_normal (void* properties, tvector3d point);
 
 // scene functions
 void tscene_init(tscene *scn, tvector4d bkcolor, tscalar env_intensity);
