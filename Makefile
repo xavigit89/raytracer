@@ -29,4 +29,4 @@ clean:
 	
 .PHONY : cleanimgs
 cleanimgs:
-	rm -f bin/imgs/*
+	rm -f resources/imgs/*

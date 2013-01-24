@@ -17,6 +17,8 @@ int main(int argc, char * argv[]) {
 		if (!parse_model(argv[1], &origin, &wnd, &fra, &scn))
 		{
 			printf("ERROR: Can't read model XML document: %s\n",argv[1]);
+			
+			return -1;
 		}
 
 		if (scn.objects.size > 0 && fra.bytes)
