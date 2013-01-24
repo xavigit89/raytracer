@@ -35,50 +35,31 @@ int main(int argc, char * argv[]) {
 		tvector3d origin;
 		tscene scn;	
 		
-		parse_model(argv[2], &origin, &wnd, &fra, &scn);
-		
-		/*if (fra.bytes) free(fra.bytes);
-		
-		printf("Creating scene elements...\n");
-		
-		wnd = (twindow) { (tvector3d) {-800.0, -450.0, 0.0}, 1600.0, 900.0 };
-		fra = (tframe) { 800, 600, (unsigned char *) malloc(COLOR_BYTES * 800 * 600 * sizeof(unsigned char)) };
-		origin = (tvector3d) { 0.0, 0.0, -10000.0};
+		printf("Reading model...\n");
+		if (!parse_model(argv[1], &origin, &wnd, &fra, &scn))
+		{
+			printf("ERROR: Can't read model XML document: %s\n",argv[1]);
+		}
 
-		tlight *light1 = tlight_new();
-		tobject *obj1 = tobject_new();
-		tsphere *sph1 = tsphere_new();
-		*/
-		/*
-		if ((light1) && (obj1) && (sph1)) {
-			printf("Initializing elements...\n");
-			*light1 = tlight_init((tvector3d) { -300.0, 0.0, -400.0 }, (tvector4d) { 1.0, 1.0, 1.0, 1.0 }, 1.0, 1.0, 0.0, 0.0);
-			*obj1 = tobject_init((tvector4d) { 1.0, 0.0, 0.0, 1.0 },
-								 1.0, 1.0, 0.8, 4,
-								 tsphere_intersections, tsphere_normal, free);
-			
-			*sph1 = tsphere_init((tvector3d) { 0.0, 0.0, 0.0 }, 100.0);
-			obj1->properties = sph1;
-			tscene_init(&scn, (tvector4d) { 0.5, 0.5, 0.5, 1.0 }, 0.15);
-				
-			tlist_insert_first(&scn.objects, obj1);
-			tlist_insert_first(&scn.lights, light1);
-			
-			printf("Starting raytracing...\n");
-			
-			assert(scn.objects.size == 1);
-			assert(scn.lights.size == 1);
-			*/
 		if (scn.objects.size > 0 && fra.bytes)
 		{
+			printf("Starting raytracing...\n");
 			raytrace(wnd, scn, origin, fra);
 
-			if (save_to_file(argv[1], fra)) {		
+			if (save_to_file(argv[2], fra)) {		
 				printf("Raytracing complete.\n");
 			}
 			else {
 				printf("Raytracing failed. Cannot save to file.\n");
-			}			
+			}
+		}
+		else if (scn.objects.size == 0)
+		{
+			printf("ERROR: no objects where read.\n");
+		}
+		else
+		{
+			printf("ERROR: no memory for frame.\n");
 		}
 		
 		if (fra.bytes)

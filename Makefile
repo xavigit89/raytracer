@@ -1,5 +1,5 @@
-OUTPUT = test01 test02
-SHARED = list vector objects raytrace
+OUTPUT = raytracer test01 test02
+SHARED = list vector objects xmlio raytrace
 SOURCES = $(OUTPUT) $(SHARED)
 
 SHAREDOBJS = $(patsubst %,obj/%.o,$(SHARED))
@@ -9,9 +9,9 @@ BINARY = $(patsubst %,bin/%,$(OUTPUT))
 
 CC = gcc
 INCLUDEDIR = -Iinclude
-CFLAGS= $(INCLUDEDIR)
+CFLAGS= $(INCLUDEDIR) -I/usr/include/libxml2
 LDLIBS= -lm
-LDFLAGS= 
+LDFLAGS = -L/usr/lib -lxml2
 
 all: $(OUTPUT)
 
