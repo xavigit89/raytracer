@@ -2,30 +2,8 @@
 #include <stdlib.h>
 #include "vector.h"
 #include "raytrace.h"
-
-unsigned long byteswap(unsigned long value) {
-	return (value << 24) | ((value << 8) & 0x00FF0000) | ((value >> 8) & 0x0000FF00) | (value >> 24);
-}
-
-int save_to_file(const char* filename, tframe fra) {
-	FILE *f = fopen(filename, "wb");
-	
-	if (f)
-	{		
-		unsigned long width = byteswap(fra.width);
-		unsigned long height = byteswap(fra.height);
-
-		size_t written_bytes = 0;
-		
-		written_bytes += fwrite (&width, 4, 1, f);
-		written_bytes += fwrite (&height, 4, 1, f);
-		written_bytes += fwrite (fra.bytes, COLOR_BYTES * sizeof(unsigned char), fra.width * fra.height, f);
-		fclose(f);
-		
-		return written_bytes;
-	}
-	return 0;
-}
+#include "xmlio.h"
+#include "avsio.h"
 
 int main(int argc, char * argv[]) {
 	if (argc > 2)
@@ -46,7 +24,7 @@ int main(int argc, char * argv[]) {
 			printf("Starting raytracing...\n");
 			raytrace(wnd, scn, origin, fra);
 
-			if (save_to_file(argv[2], fra)) {		
+			if (save_to_file(argv[2], fra.width, fra.width, fra.bytes)) {		
 				printf("Raytracing complete.\n");
 			}
 			else {

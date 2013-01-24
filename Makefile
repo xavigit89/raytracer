@@ -1,5 +1,5 @@
 OUTPUT = raytracer test01 test02
-SHARED = list vector objects xmlio raytrace
+SHARED = list vector objects xmlio raytrace avsio
 SOURCES = $(OUTPUT) $(SHARED)
 
 SHAREDOBJS = $(patsubst %,obj/%.o,$(SHARED))
@@ -26,3 +26,7 @@ $(OBJECTS): obj/%.o : src/%.c $(HEADERS)
 .PHONY : clean
 clean:
 	rm -f obj/*.o bin/*
+	
+.PHONY : cleanimgs
+cleanimgs:
+	rm -f bin/imgs/*
