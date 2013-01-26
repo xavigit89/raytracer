@@ -239,6 +239,94 @@ tsphere * parse_sphere(xmlDocPtr doc, xmlNodePtr cur)
 	return sph;
 }
 
+tcylinder * parse_cylinder(xmlDocPtr doc, xmlNodePtr cur)
+{
+	tcylinder *cyl = tcylinder_new();
+	
+	if (cyl)
+	{
+		
+		cur = cur->xmlChildrenNode;
+		
+		while (cur)
+		{
+			if (!xmlStrcmp(cur->name,"anchor"))
+			{
+				cyl->anchor = parse_tvector3d(doc,cur);
+			}
+			else if (!xmlStrcmp(cur->name,"direction"))
+			{
+				cyl->direction = parse_tvector3d(doc,cur);
+			}
+			else if (!xmlStrcmp(cur->name,"radius"))
+			{
+				cyl->radius = parse_tscalar(doc,cur);
+			}
+			else if (!xmlStrcmp(cur->name,"h1"))
+			{
+				cyl->h1 = parse_tscalar(doc,cur);
+			}
+			else if (!xmlStrcmp(cur->name,"h2"))
+			{
+				cyl->h2 = parse_tscalar(doc,cur);
+			}
+			
+			cur = cur->next;
+		}
+		
+		*cyl = tcylinder_init(cyl->anchor, cyl->direction, cyl->radius, cyl->h1, cyl->h2);
+	}
+		
+	return cyl;
+}
+
+tcone * parse_cone(xmlDocPtr doc, xmlNodePtr cur)
+{
+	tcone *cn = tcone_new();
+	tscalar v = 1.0;
+	tscalar u = 1.0;
+	
+	if (cn)
+	{
+		
+		cur = cur->xmlChildrenNode;
+		
+		while (cur)
+		{
+			if (!xmlStrcmp(cur->name,"anchor"))
+			{
+				cn->anchor = parse_tvector3d(doc,cur);
+			}
+			else if (!xmlStrcmp(cur->name,"direction"))
+			{
+				cn->direction = parse_tvector3d(doc,cur);
+			}
+			else if (!xmlStrcmp(cur->name,"u"))
+			{
+				u = parse_tscalar(doc,cur);
+			}
+			else if (!xmlStrcmp(cur->name,"v"))
+			{
+				v = parse_tscalar(doc,cur);
+			}
+			else if (!xmlStrcmp(cur->name,"h1"))
+			{
+				cn->h1 = parse_tscalar(doc,cur);
+			}
+			else if (!xmlStrcmp(cur->name,"h2"))
+			{
+				cn->h2 = parse_tscalar(doc,cur);
+			}
+			
+			cur = cur->next;
+		}
+		
+		*cn = tcone_init(cn->anchor, cn->direction, v / u, cn->h1, cn->h2);
+	}
+		
+	return cn;
+}
+
 void * parse_properties(xmlDocPtr doc, xmlNodePtr cur, eobject *type)
 {
 	
@@ -262,6 +350,16 @@ void * parse_properties(xmlDocPtr doc, xmlNodePtr cur, eobject *type)
 					printf("It's a sphere.\n");
 					*type = SPHERE;
 				}
+				else if (!xmlStrcmp(key,"cylinder"))
+				{
+					printf("It's a cylinder.\n");
+					*type = CYLINDER;
+				}
+				else if (!xmlStrcmp(key,"cone"))
+				{
+					printf("It's a cone.\n");
+					*type = CONE;
+				}
 				/* Add here other types */
 				
 				xmlFree(key);
@@ -275,6 +373,16 @@ void * parse_properties(xmlDocPtr doc, xmlNodePtr cur, eobject *type)
 	{	
 		printf("Reading a sphere...\n");	
 		properties = parse_sphere(doc, cur);
+	}
+	else if (*type == CYLINDER)
+	{	
+		printf("Reading a cylinder...\n");	
+		properties = parse_cylinder(doc, cur);
+	}
+	else if (*type == CONE)
+	{	
+		printf("Reading a cone...\n");	
+		properties = parse_cone(doc, cur);
 	}
 	
 	return properties;
@@ -330,6 +438,37 @@ tobject* parse_tobject(xmlDocPtr doc, xmlNodePtr cur)
 						printf("\tAnchor: (%.2LF, %.2LF, %.2LF)\n", sph->anchor.x, sph->anchor.y, sph->anchor.z);
 						printf("\tRadius: %.2LF\n", sph->radius);
 					}
+					else if (type == CYLINDER)
+					{
+						object->intersections = tcylinder_intersections;
+						object->normal = tcylinder_normal;
+						object->free_properties = free;
+						
+						tcylinder *cyl = (tcylinder *) object->properties;
+							
+						printf("Cylinder:\n");
+						printf("\tAnchor: (%.2LF, %.2LF, %.2LF)\n", cyl->anchor.x, cyl->anchor.y, cyl->anchor.z);
+						printf("\tDirection: (%.2LF, %.2LF, %.2LF)\n", cyl->direction.x, cyl->direction.y, cyl->direction.z);
+						printf("\tRadius: %.2LF\n", cyl->radius);
+						printf("\tH1: %.2LF\n", cyl->h1);
+						printf("\tH2: %.2LF\n", cyl->h2);
+					}
+					else if (type == CONE)
+					{
+						object->intersections = tcone_intersections;
+						object->normal = tcone_normal;
+						object->free_properties = free;
+						
+						tcone *cn = (tcone *) object->properties;
+							
+						printf("Cone:\n");
+						printf("\tAnchor: (%.2LF, %.2LF, %.2LF)\n", cn->anchor.x, cn->anchor.y, cn->anchor.z);
+						printf("\tDirection: (%.2LF, %.2LF, %.2LF)\n", cn->direction.x, cn->direction.y, cn->direction.z);
+						printf("\tRatio: %.2LF\n", cn->radius);
+						printf("\tH1: %.2LF\n", cn->h1);
+						printf("\tH2: %.2LF\n", cn->h2);
+					}
+					/** TODO: Add more objects here*/
 				}
 				else
 				{

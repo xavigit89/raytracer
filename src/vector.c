@@ -1,5 +1,17 @@
 #include "vector.h"
 
+int is_contained(tscalar lower, tscalar upper, tscalar value)
+{
+	if (isnanl(value))
+	{
+		return 0;
+	}
+	else
+	{
+		return ((isnanl(lower) || lower <= value) && (isnanl(upper) || value <= upper)) ? 1 : 0;	
+	}
+}
+
 tvector3d v_from_values (tscalar x, tscalar y, tscalar z) {
 	return (tvector3d) { x, y, z};
 }

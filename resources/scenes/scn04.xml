@@ -9,59 +9,67 @@
 			<X>-800.0</X>
 			<Y>-450.0</Y>
 			<Z>0.0</Z>
-		</origin>
+		</origin>		
 		<width>1600.0</width>
 		<height>900.0</height>
 	</window>
 	<frame>
 		<width>320</width>
-		<height>180</height>
+		<height>180</height>		
 	</frame>
 	<scene>
-		<color>
-			<R>128</R>
-			<G>128</G>
-			<B>128</B>
-			<A>255</A>
-		</color>
-		<environment_intensity>0.15</environment_intensity>
-		<light>
-			<anchor>
-				<X>-300.0</X>
-				<Y>400.0</Y>
-				<Z>0.0</Z>
-			</anchor>
-			<c1>1.0</c1>
-			<c2>0.0</c2>
-			<c3>0.0</c3>
-			<color>
-				<R>255</R>
-				<G>255</G>
-				<B>255</B>
-				<A>255</A>
-			</color>
-			<intensity>1.0</intensity>
-		</light>
-		<object>
-			<color>
-				<R>0</R>
-				<G>255</G>
-				<B>0</B>
-				<A>255</A>
-			</color>
-			<environment_coeficient>1.0</environment_coeficient>
-			<difuse_coeficient>1.0</difuse_coeficient>
-			<specular_coeficient>0.8</specular_coeficient>
-			<specular_exponent>4</specular_exponent>
-			<properties>
-				<type>sphere</type>
-				<anchor>
-					<X>0.0</X>
-					<Y>0.0</Y>
-					<Z>0.0</Z>
-				</anchor>
-				<radius>100.0</radius>
-			</properties>
-		</object>
+	   <color>
+		   <R>128</R>
+		   <G>128</G>
+		   <B>128</B>
+		   <A>255</A>
+	   </color>
+	   <environment_intensity>0.15</environment_intensity>
+	   <light>
+		   <intensity>1.0</intensity>
+		   <c1>1.0</c1>
+		   <c2>0.0</c2>
+		   <c3>0.0</c3>
+		   <anchor>
+			   <X>-300.0</X>
+			   <Y>0.0</Y>
+			   <Z>-400.0</Z>
+		   </anchor>
+		   <color>
+			   <R>255</R>
+			   <G>255</G>
+			   <B>255</B>
+			   <A>255</A>
+		   </color>
+	   </light>
+	   <object>
+		   <environment_coeficient>1.0</environment_coeficient>
+		   <difuse_coeficient>1.0</difuse_coeficient>
+		   <specular_coeficient>0.8</specular_coeficient>
+		   <specular_exponent>4</specular_exponent>
+		   <color>
+			   <R>255</R>
+			   <G>255</G>
+			   <B>0</B>
+			   <A>255</A>		
+		   </color>
+		   <properties>
+			   <type>cone</type>
+			   <anchor>
+				   <X>0.0</X>
+				   <Y>0.0</Y>
+				   <Z>0.0</Z>
+			   </anchor>
+			   <direction>
+				   <X>0.0</X>
+				   <Y>1.0</Y>
+				   <Z>0.0</Z>
+			   </direction>
+			   <u>2.0</u>
+			   <v>1.0</v>
+			   <h1>-400.0</h1>
+			   <h2>0.0</h2>
+		   </properties>
+	   </object>
 	</scene>
 </model>

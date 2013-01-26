@@ -50,7 +50,7 @@
 		   <color>
 			   <R>0</R>
 			   <G>255</G>
-			   <B>0</B>
+			   <B>255</B>
 			   <A>255</A>		
 		   </color>
 		   <properties>
@@ -66,8 +66,8 @@
 				   <Z>0.0</Z>
 			   </direction>
 			   <radius>200.0</radius>
-			   <h1>NaN</h1>
-			   <h2>NaN</h2>
+			   <h1>-100.0</h1>
+			   <h2>100.0</h2>
 		   </properties>
 	   </object>
 	</scene>

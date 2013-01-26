@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <libxml/parser.h>
@@ -6,6 +7,8 @@
 typedef enum
 {
 	SPHERE,
+	CYLINDER,
+	CONE,
 	/* Unknown object */
 	UNKNOWN = -1
 } eobject;

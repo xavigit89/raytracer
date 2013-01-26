@@ -52,6 +52,9 @@ typedef tscalar* tvector;
 typedef struct { tscalar x, y, z; } tvector3d;
 typedef struct { tscalar x, y, z, w; } tvector4d;
 
+// Scalar related functions
+int is_contained(tscalar lower, tscalar upper, tscalar value);
+
 // Vector related functions
 tvector3d v_from_values (tscalar x, tscalar y, tscalar z);
 tvector3d v_add (tvector3d v, tvector3d w);

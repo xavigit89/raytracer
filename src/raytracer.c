@@ -11,7 +11,7 @@ int main(int argc, char * argv[]) {
 		twindow wnd;
 		tframe fra;
 		tvector3d origin;
-		tscene scn;	
+		tscene scn;
 		
 		printf("Reading model...\n");
 		if (!parse_model(argv[1], &origin, &wnd, &fra, &scn))

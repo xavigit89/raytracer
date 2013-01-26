@@ -19,6 +19,7 @@
 #define DEFAULT_OBJECT_SPECULAR_K 0.8
 #define DEFAULT_OBJECT_SPECULAR_N 4
 #define DEFAULT_OBJECT_RADIUS 100.0
+#define DEFAULT_OBJECT_RATIO 1.0
 
 
 typedef void (*intersect_fun) (void *, tvector3d, tvector3d, long *, tscalar *);
@@ -73,6 +74,8 @@ typedef struct {
 	void (*coeficientsf)(tscalar, tscalar, tscalar, tscalar, tscalar, tscalar *, tscalar *, tscalar *);
 } tcylinder;
 
+typedef tcylinder tcone;
+
 typedef struct {
 	tvector4d bkcolor;
 	tscalar env_intensity;
@@ -110,6 +113,13 @@ tcylinder tcylinder_init (tvector3d anchor, tvector3d direction, tscalar radius,
 void tcylinder_with_coeficients (tscalar radius2, tscalar ID, tscalar IX, tscalar DX, tscalar k, tscalar *A, tscalar *b, tscalar *C);
 void tcylinder_intersections (void* properties, tvector3d origin, tvector3d direction, long *count, tscalar *distances);
 tvector3d tcylinder_normal (void* properties, tvector3d point);
+
+// cone functions
+tcone * tcone_new();
+tcone tcone_init (tvector3d anchor, tvector3d direction, tscalar ratio, tscalar h1, tscalar h2);
+void tcone_with_coeficients (tscalar ratio2, tscalar ID, tscalar IX, tscalar DX, tscalar k, tscalar *A, tscalar *b, tscalar *C);
+void tcone_intersections (void* properties, tvector3d origin, tvector3d direction, long *count, tscalar *distances);
+tvector3d tcone_normal (void* properties, tvector3d point);
 
 // scene functions
 tscene * tscene_new ();

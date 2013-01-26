@@ -139,7 +139,7 @@ tcylinder * tcylinder_new()
 	
 	if (cyl)
 	{
-		*cyl = tcylinder_init(DEFAULT_POINT, DEFAULT_DIRECTION, DEFAULT_OBJECT_RADIUS, FP_NAN, FP_NAN);
+		*cyl = tcylinder_init(DEFAULT_POINT, DEFAULT_DIRECTION, DEFAULT_OBJECT_RADIUS, NAN, NAN);
 	}
 	
 	return cyl;
@@ -164,11 +164,6 @@ tcylinder tcylinder_init(tvector3d anchor, tvector3d direction, tscalar radius, 
 	return (tcylinder) { anchor, direction, radius, radius * radius, h1, h2, tcylinder_with_coeficients };
 }
 
-int is_contained(tscalar lower, tscalar upper, tscalar value)
-{
-	return ((isnanl(lower) || lower <= value) && (isnanl(upper) || value <= upper)) ? 1 : 0;	
-}
-
 void tcylinder_intersections (void* properties, tvector3d origin, tvector3d direction, long *count, tscalar *distances)
 {
 	tcylinder *cyl = (tcylinder *) properties;
@@ -177,8 +172,9 @@ void tcylinder_intersections (void* properties, tvector3d origin, tvector3d dire
 	tscalar ID = v_dot_product(direction, cyl->direction);
 	tscalar IX = v_dot_product(direction, to_origin);
 	tscalar DX = v_dot_product(cyl->direction, to_origin);
-	tscalar A, b, C, d, D, sqrt_d;
+	tscalar A, b, C, d, D, sqrt_d, kDX;
 	int s;
+	long i;
 	
 	cyl->coeficientsf(cyl->radius2, ID, IX, DX, dist_to_origin, &A, &b, &C);
 
@@ -194,14 +190,48 @@ void tcylinder_intersections (void* properties, tvector3d origin, tvector3d dire
 		sqrt_d = sqrtl(d);
 		distances[0] = (-b - sqrt_d) / A;
 		distances[1] = (-b + sqrt_d) / A;
-		if (is_contained(cyl->h1, cyl->h2, distances[0])) (*count)++;
-		if (is_contained(cyl->h1, cyl->h2, distances[1])) (*count)++;
+		*count = 2;
 	}
 	else if (s == 0)
+	{
 		distances[0] = -b / A;
-		if (is_contained(cyl->h1, cyl->h2, distances[0])) (*count)++;
+		*count = 2;
+	}
 	else
+	{
 		*count = 0;
+		return;
+	}
+	
+	kDX = dist_to_origin * DX;
+	
+	d = kDX + distances[0] * ID;
+	
+	if (is_contained(cyl->h1, cyl->h2, d))
+	{
+		if (*count == 2)
+		{
+			d = kDX + distances[1] * ID;
+			if (!is_contained(cyl->h1, cyl->h2, d)) (*count)--;
+		}
+	}
+	else
+	{
+		(*count)--;
+		
+		if (*count == 1)
+		{			
+			d = kDX + distances[1] * ID;
+			if (!is_contained(cyl->h1, cyl->h2, d))
+			{
+				(*count)--;
+			}
+			else
+			{
+				distances[0] = distances[1];
+			}
+		}
+	}
 }
 
 tvector3d tcylinder_normal (void* properties, tvector3d point)
@@ -212,6 +242,54 @@ tvector3d tcylinder_normal (void* properties, tvector3d point)
     return v_scale(v_sub(point, point_projection), 1.0 / cyl->radius);
 }
 
+// cone functions
+tcone * tcone_new()
+{
+	tcone *cn = (tcone *) malloc(sizeof(tcone));
+	
+	if (cn)
+	{
+		*cn = tcone_init(DEFAULT_POINT, DEFAULT_DIRECTION, DEFAULT_OBJECT_RATIO, NAN, NAN);
+	}
+	
+	return cn;
+}
+
+void tcone_with_coeficients(tscalar ratio2, tscalar ID, tscalar IX, tscalar DX, tscalar k, tscalar *A, tscalar *b, tscalar *C)
+{
+	ratio2 += 1.0;
+	
+	*A = 1.0 - ratio2 * (ID * ID);
+	*b = k * (IX - ratio2 * (DX * ID));
+	*C = (k * k) * (1 - ratio2 * (DX * DX));
+}
+
+tcone tcone_init(tvector3d anchor, tvector3d direction, tscalar ratio, tscalar h1, tscalar h2)
+{	
+	if (!isnanl(h1) && !isnanl(h2) && h2 < h1)
+	{
+		tscalar aux = h1;
+		h1 = h2;
+		h2 = aux;
+	}
+	
+	return (tcone) { anchor, direction, ratio, ratio * ratio, h1, h2, tcone_with_coeficients };
+}
+
+void tcone_intersections (void* properties, tvector3d origin, tvector3d direction, long *count, tscalar *distances)
+{
+	tcylinder_intersections(properties, origin, direction, count, distances);
+}
+
+tvector3d tcone_normal (void* properties, tvector3d point)
+{
+	tcone *cn = (tcone *) properties;
+	tscalar dist_from_anchor = v_dot_product(v_sub(point, cn->anchor), cn->direction);
+    tvector3d point_projection = v_point_at(cn->anchor, cn->direction, dist_from_anchor);
+    return v_normalize(v_sub(point, point_projection), NULL);
+}
+
+// scene functions
 tscene * tscene_new()
 {
 	tscene *scn = (tscene *) malloc(sizeof(tscene));
