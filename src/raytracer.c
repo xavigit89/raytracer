@@ -26,7 +26,7 @@ int main(int argc, char * argv[]) {
 			printf("Starting raytracing...\n");
 			raytrace(wnd, scn, origin, fra);
 
-			if (save_to_file(argv[2], fra.width, fra.width, fra.bytes)) {		
+			if (save_to_file(argv[2], fra.width, fra.height, fra.bytes)) {		
 				printf("Raytracing complete.\n");
 			}
 			else {

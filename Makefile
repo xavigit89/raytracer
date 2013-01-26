@@ -1,4 +1,5 @@
-OUTPUT = raytracer test01 test02
+OUTPUT = raytracer
+OUTPUTFOLDERS = bin obj
 SHARED = list vector objects xmlio raytrace avsio
 SOURCES = $(OUTPUT) $(SHARED)
 
@@ -13,9 +14,15 @@ CFLAGS= $(INCLUDEDIR) -I/usr/include/libxml2
 LDLIBS= -lm
 LDFLAGS = -L/usr/lib -lxml2
 
-all: $(OUTPUT)
-
 $(OUTPUT): % : bin/%
+
+all: $(OUTPUTFOLDERS) imgs $(OUTPUT)
+
+imgs:
+	mkdir resources/imgs
+
+$(OUTPUTFOLDERS):
+	mkdir $@
 
 $(BINARY): bin/%: obj/%.o $(SHAREDOBJS)
 	$(CC) -o $@ $(SHAREDOBJS) $< $(LDLIBS) $(CFLAGS) $(LDFLAGS)
@@ -25,8 +32,9 @@ $(OBJECTS): obj/%.o : src/%.c $(HEADERS)
 
 .PHONY : clean
 clean:
-	rm -f obj/*.o bin/*
+	rm -f obj/*.o bin/* resources/imgs/*
 	
-.PHONY : cleanimgs
-cleanimgs:
-	rm -f resources/imgs/*
+.PHONY : cleanall
+cleanall:
+	rm -f obj/*.o bin/* resources/imgs/*
+	rmdir obj bin resources/imgs
