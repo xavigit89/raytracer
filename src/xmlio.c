@@ -121,12 +121,11 @@ twindow parse_twindow(xmlDocPtr doc, xmlNodePtr cur)
 		}
 		else if (!xmlStrcmp(cur->name,"width"))
 		{
-			// wnd.width = parse_tscalar(doc, cur);
 			parse_simple(doc, cur, "%LF", &wnd.width);
 		}
 		else if (!xmlStrcmp(cur->name,"height"))
 		{
-			wnd.height = parse_tscalar(doc, cur);
+			parse_simple(doc, cur, "%LF", &wnd.height);
 		}
 		
 		cur = cur->next;
@@ -256,7 +255,8 @@ tcylinder * parse_cylinder(xmlDocPtr doc, xmlNodePtr cur)
 			}
 			else if (!xmlStrcmp(cur->name,"direction"))
 			{
-				cyl->direction = parse_tvector3d(doc,cur);
+				// Not normalizing the direction causes deformations in the raytracer cylinder
+				cyl->direction = v_normalize(parse_tvector3d(doc,cur), NULL);
 			}
 			else if (!xmlStrcmp(cur->name,"radius"))
 			{
@@ -299,7 +299,8 @@ tcone * parse_cone(xmlDocPtr doc, xmlNodePtr cur)
 			}
 			else if (!xmlStrcmp(cur->name,"direction"))
 			{
-				cn->direction = parse_tvector3d(doc,cur);
+				// Not normalizing the direction causes deformations in the raytracer cone
+				cn->direction = v_normalize(parse_tvector3d(doc,cur), NULL);
 			}
 			else if (!xmlStrcmp(cur->name,"u"))
 			{
@@ -327,6 +328,38 @@ tcone * parse_cone(xmlDocPtr doc, xmlNodePtr cur)
 	return cn;
 }
 
+tplane * parse_plane(xmlDocPtr doc, xmlNodePtr cur)
+{
+	tplane *pla = tplane_new();
+	tvector3d anchor = DEFAULT_POINT;
+	tvector3d direction = DEFAULT_DIRECTION;
+	
+	if (pla)
+	{
+		
+		cur = cur->xmlChildrenNode;
+		
+		while (cur)
+		{
+			if (!xmlStrcmp(cur->name,"anchor"))
+			{
+				anchor = parse_tvector3d(doc,cur);
+			}
+			else if (!xmlStrcmp(cur->name,"direction"))
+			{
+				// The init process makes the normalization process
+				direction = parse_tvector3d(doc,cur);
+			}
+			
+			cur = cur->next;
+		}
+		
+		*pla = tplane_init(anchor, direction);
+	}
+		
+	return pla;
+}
+
 void * parse_properties(xmlDocPtr doc, xmlNodePtr cur, eobject *type)
 {
 	
@@ -341,49 +374,27 @@ void * parse_properties(xmlDocPtr doc, xmlNodePtr cur, eobject *type)
 		{
 			xmlChar *key = xmlNodeListGetString(doc, typeptr->children, 1);
 			
-			printf("Reading the type...\n");
-			
 			if (key)
 			{				
-				if (!xmlStrcmp(key,"sphere"))
-				{
-					printf("It's a sphere.\n");
-					*type = SPHERE;
-				}
-				else if (!xmlStrcmp(key,"cylinder"))
-				{
-					printf("It's a cylinder.\n");
-					*type = CYLINDER;
-				}
-				else if (!xmlStrcmp(key,"cone"))
-				{
-					printf("It's a cone.\n");
-					*type = CONE;
-				}
-				/* Add here other types */
+				if (!xmlStrcmp(key,"sphere"))			*type = SPHERE;
+				else if (!xmlStrcmp(key,"cylinder"))	*type = CYLINDER;
+				else if (!xmlStrcmp(key,"cone"))		*type = CONE;
+				else if (!xmlStrcmp(key,"plane"))		*type = PLANE;
+				/** TODO: Add here other types */
 				
 				xmlFree(key);
 			}
+			break;
 		}
 		
 		typeptr = typeptr->next;
 	}
 	
-	if (*type == SPHERE)
-	{	
-		printf("Reading a sphere...\n");	
-		properties = parse_sphere(doc, cur);
-	}
-	else if (*type == CYLINDER)
-	{	
-		printf("Reading a cylinder...\n");	
-		properties = parse_cylinder(doc, cur);
-	}
-	else if (*type == CONE)
-	{	
-		printf("Reading a cone...\n");	
-		properties = parse_cone(doc, cur);
-	}
+	if		(*type == SPHERE) 		properties = parse_sphere(doc, cur);
+	else if (*type == CYLINDER) 	properties = parse_cylinder(doc, cur);
+	else if (*type == CONE) 		properties = parse_cone(doc, cur);
+	else if (*type == PLANE) 		properties = parse_plane(doc, cur);
+	/** TODO: Add here other types */
 	
 	return properties;
 }
@@ -468,6 +479,20 @@ tobject* parse_tobject(xmlDocPtr doc, xmlNodePtr cur)
 						printf("\tH1: %.2LF\n", cn->h1);
 						printf("\tH2: %.2LF\n", cn->h2);
 					}
+					else if (type == PLANE)
+					{
+						object->intersections = tplane_intersections;
+						object->normal = tplane_normal;
+						object->free_properties = free;
+						
+						tplane *pla = (tplane *) object->properties;
+							
+						printf("Plane:\n");
+						printf("\tA: %.2LF\n", pla->x);
+						printf("\tB: %.2LF\n", pla->y);
+						printf("\tC: %.2LF\n", pla->z);
+						printf("\tD: %.2LF\n", pla->w);
+					}
 					/** TODO: Add more objects here*/
 				}
 				else
@@ -485,7 +510,7 @@ tobject* parse_tobject(xmlDocPtr doc, xmlNodePtr cur)
 		free(object);
 		object = NULL;
 	}
-	
+
 	return object;
 }
 
@@ -517,11 +542,10 @@ tscene parse_tscene(xmlDocPtr doc, xmlNodePtr cur)
 			if (light)
 			{
 				tlist_insert_first(&scn.lights, light);
-				printf("Light %ld:\n\torigin = (%.2LF, %.2LF, %.2LF)\n\tcolor = (%.2LF, %.2LF, %.2LF, %.2LF)\n\tintensity = %.2LF\n",
-					scn.lights.size,
-					light->anchor.x, light->anchor.y, light->anchor.z,
-					light->color.x, light->color.y, light->color.z, light->color.w,
-					light->intensity);
+				printf("Light %ld:\n", scn.lights.size);
+				printf("\torigin = (%.2LF, %.2LF, %.2LF)\n", light->anchor.x, light->anchor.y, light->anchor.z);
+				printf("\tcolor = (%.2LF, %.2LF, %.2LF, %.2LF)\n", light->color.x, light->color.y, light->color.z, light->color.w);
+				printf("\tintensity = %.2LF\n", light->intensity);
 			}
 		}
 		else if (!xmlStrcmp(cur->name,"object"))
@@ -533,10 +557,10 @@ tscene parse_tscene(xmlDocPtr doc, xmlNodePtr cur)
 				tlist_insert_first(&scn.objects, object);
 				printf("Object %ld:\n", scn.objects.size);
 				printf("\tcolor = (%.2LF, %.2LF, %.2LF, %.2LF)\n", object->color.x, object->color.y, object->color.z, object->color.w);
-				printf("\tenvironment coeficient: %LF\n", object->env_k);
-				printf("\tdifuse coeficient: %LF\n", object->difuse_k);
-				printf("\tspecular coeficient: %LF\n", object->specular_k);
-				printf("\tspecular exponent: %LF\n", object->specular_n);
+				printf("\tenvironment coeficient: %.2LF\n", object->env_k);
+				printf("\tdifuse coeficient: %.2LF\n", object->difuse_k);
+				printf("\tspecular coeficient: %.2LF\n", object->specular_k);
+				printf("\tspecular exponent: %.2LF\n", object->specular_n);
 			}
 		}
 		
@@ -573,17 +597,24 @@ int parse_model(const char *docname, tvector3d *origin, twindow *wnd, tframe *fr
 				else if ((!xmlStrcmp(cur->name, (const xmlChar *) "window")))
 				{
 					*wnd = parse_twindow(doc, cur);
-					printf("Window: origin = [%.2LF, %.2LF, %.2LF] width = %.2LF height = %.2LF\n", wnd->origin.x, wnd->origin.y, wnd->origin.z, wnd->width, wnd->height);
+					printf("Window:\n");
+					printf("\torigin = [%.2LF, %.2LF, %.2LF]\n", wnd->origin.x, wnd->origin.y, wnd->origin.z);
+					printf("\twidth = %.2LF\n", wnd->width);
+					printf("\theight = %.2LF\n", wnd->height);
 				}
 				else if ((!xmlStrcmp(cur->name, (const xmlChar *) "frame")))
 				{
 					*fra = parse_tframe(doc, cur);
-					printf("Frame: width = %lu height = %lu\n", fra->width, fra->height);
+					printf("Frame:\n");
+					printf("\twidth = %lu\n", fra->width);
+					printf("\theight = %lu\n", fra->height);
 				}
 				else if ((!xmlStrcmp(cur->name, (const xmlChar *) "scene")))
 				{
 					*scn = parse_tscene(doc, cur);
-					printf("Scene: color = (%.2LF, %.2LF, %.2LF, %.2LF) environment intensity = %.2LF\n", scn->bkcolor.x, scn->bkcolor.y, scn->bkcolor.z, scn->bkcolor.w, scn->env_intensity);
+					printf("Scene:\n");
+					printf("\tcolor = (%.2LF, %.2LF, %.2LF, %.2LF)\n", scn->bkcolor.x, scn->bkcolor.y, scn->bkcolor.z, scn->bkcolor.w);
+					printf("\tenvironment intensity = %.2LF\n", scn->env_intensity);
 				}
 				
 				cur = cur->next;

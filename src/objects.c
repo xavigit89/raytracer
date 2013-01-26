@@ -1,4 +1,3 @@
-#include <assert.h>
 #include "objects.h"
 
 tlight * tlight_new()
@@ -139,7 +138,7 @@ tcylinder * tcylinder_new()
 	
 	if (cyl)
 	{
-		*cyl = tcylinder_init(DEFAULT_POINT, DEFAULT_DIRECTION, DEFAULT_OBJECT_RADIUS, NAN, NAN);
+		*cyl = tcylinder_init(DEFAULT_POINT, DEFAULT_DIRECTION, DEFAULT_OBJECT_RADIUS, -INFINITY, INFINITY);
 	}
 	
 	return cyl;
@@ -187,15 +186,22 @@ void tcylinder_intersections (void* properties, tvector3d origin, tvector3d dire
 	
 	if (s == 1)
 	{
+		static long count2 = 0;
+		printf("Two: %ld\n", ++count2);
+
 		sqrt_d = sqrtl(d);
 		distances[0] = (-b - sqrt_d) / A;
 		distances[1] = (-b + sqrt_d) / A;
+		
 		*count = 2;
 	}
 	else if (s == 0)
 	{
+		static long count1 = 0;
+		printf("One: %ld\n", ++count1);
+		
 		distances[0] = -b / A;
-		*count = 2;
+		*count = 1;
 	}
 	else
 	{
@@ -203,7 +209,7 @@ void tcylinder_intersections (void* properties, tvector3d origin, tvector3d dire
 		return;
 	}
 	
-	kDX = dist_to_origin * DX;
+	kDX = dist_to_origin * DX;	
 	
 	d = kDX + distances[0] * ID;
 	
@@ -249,7 +255,7 @@ tcone * tcone_new()
 	
 	if (cn)
 	{
-		*cn = tcone_init(DEFAULT_POINT, DEFAULT_DIRECTION, DEFAULT_OBJECT_RATIO, NAN, NAN);
+		*cn = tcone_init(DEFAULT_POINT, DEFAULT_DIRECTION, DEFAULT_OBJECT_RATIO, -INFINITY, INFINITY);
 	}
 	
 	return cn;
@@ -261,7 +267,7 @@ void tcone_with_coeficients(tscalar ratio2, tscalar ID, tscalar IX, tscalar DX, 
 	
 	*A = 1.0 - ratio2 * (ID * ID);
 	*b = k * (IX - ratio2 * (DX * ID));
-	*C = (k * k) * (1 - ratio2 * (DX * DX));
+	*C = (k * k) * (1.0 - ratio2 * (DX * DX));
 }
 
 tcone tcone_init(tvector3d anchor, tvector3d direction, tscalar ratio, tscalar h1, tscalar h2)
@@ -287,6 +293,48 @@ tvector3d tcone_normal (void* properties, tvector3d point)
 	tscalar dist_from_anchor = v_dot_product(v_sub(point, cn->anchor), cn->direction);
     tvector3d point_projection = v_point_at(cn->anchor, cn->direction, dist_from_anchor);
     return v_normalize(v_sub(point, point_projection), NULL);
+}
+
+// scene functions
+tplane * tplane_new()
+{
+	tplane *pla = (tplane *) malloc(sizeof(tplane));
+	
+	if (pla) *pla = tplane_init(DEFAULT_POINT, DEFAULT_DIRECTION);
+	
+	return pla;
+}
+
+tplane tplane_init (tvector3d anchor, tvector3d direction)
+{
+	tvector3d normalized = v_normalize(direction, NULL);
+	tscalar d = -v_dot_product(anchor, normalized);
+	return (tplane) { normalized.x, normalized.y, normalized.z, d};
+}
+
+void tplane_intersections (void* properties, tvector3d origin, tvector3d direction, long *count, tscalar *distances)
+{
+	static long c = 0;
+	
+	tplane *pla = (tplane *) properties;
+	tscalar ND = v_dot_product(direction, *((tvector3d *) properties));
+	
+	if (ZERO(ND))
+	{
+		printf("Zero division");
+		*count = 0;
+	}
+	else
+	{
+		printf("Count: %ld\n", ++c);
+		distances[0] = -(pla->w + v_dot_product(origin, *((tvector3d *) properties))) / ND;
+		*count = 1;
+	}
+}
+
+tvector3d tplane_normal (void* properties, tvector3d point)
+{
+	return *((tvector3d *) properties);
 }
 
 // scene functions

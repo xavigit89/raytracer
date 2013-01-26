@@ -33,6 +33,8 @@ tlist get_intersections (tlist objects, tvector3d origin, tvector3d direction) {
 }
 
 tvector4d get_color (tscene scn, tvector3d origin, tvector3d direction) {
+	static long count = 0;
+	
 	tlist intersections = get_intersections(scn.objects, origin, direction);	
 	assert(intersections.size >= 0);
 	
@@ -41,6 +43,7 @@ tvector4d get_color (tscene scn, tvector3d origin, tvector3d direction) {
 		tintersection * inter = intersections.first->value;
 		tobject * obj = inter->object;
 		tvector3d point = v_point_at (origin, direction, inter->distance);
+		printf("Count: %ld\n", ++count);
 		assert(obj);
 		assert(obj->normal);
 		assert(obj->properties);
@@ -110,7 +113,7 @@ tvector4d get_color (tscene scn, tvector3d origin, tvector3d direction) {
 }
 
 void raytrace (twindow wnd, tscene scn, tvector3d origin, tframe fra) {
-	unsigned long i,j;
+	long i,j;
 	unsigned char *bytecolor;
 	tvector3d p,direction;
 	tvector4d scalarcolor;
@@ -124,7 +127,7 @@ void raytrace (twindow wnd, tscene scn, tvector3d origin, tframe fra) {
 	bytecolor = fra.bytes;
 	assert(bytecolor != NULL);
 	
-	for (j = 0; j < fra.height; j++) {
+	for (j = fra.height - 1; j >= 0; j--) {
 		for (i = 0; i < fra.width; i++) {
 			p.x = (i + 0.5) * width_ratio + wnd.origin.x;
 			p.y = (j + 0.5) * height_ratio + wnd.origin.y;

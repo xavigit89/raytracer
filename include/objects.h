@@ -1,7 +1,9 @@
 #ifndef __OBJECTS_H
 #define __OBJECTS_H
 
+#include <assert.h>
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include "vector.h"
 #include "list.h"
@@ -9,10 +11,13 @@
 #define COLOR_BYTES 4
 #define DEFAULT_POINT (tvector3d) { 0.0, 0.0, 0.0 }
 #define DEFAULT_DIRECTION (tvector3d) { 0.0, 1.0, 0.0 }
+
 #define DEFAULT_SCENE_BKCOLOR (tvector4d) { 0.5, 0.5, 0.5, 1.0 }
 #define DEFAULT_SCENE_ENV_INTENSITY 1.0
+
 #define DEFAULT_LIGHT_COLOR (tvector4d) { 1.0, 1.0, 1.0, 1.0 }
 #define DEFAULT_LIGHT_INTENSITY 1.0
+
 #define DEFAULT_OBJECT_COLOR (tvector4d) { 0.0, 1.0, 0.0, 1.0 }
 #define DEFAULT_OBJECT_ENV_K 1.0
 #define DEFAULT_OBJECT_DIFUSE_K 1.0
@@ -26,7 +31,7 @@ typedef void (*intersect_fun) (void *, tvector3d, tvector3d, long *, tscalar *);
 typedef tvector3d (*normal_fun) (void *, tvector3d);
 
 typedef struct {
-	unsigned long width,height;
+	long width,height;
 	unsigned char * bytes;
 } tframe;
 
@@ -76,6 +81,8 @@ typedef struct {
 
 typedef tcylinder tcone;
 
+typedef tvector4d tplane;
+
 typedef struct {
 	tvector4d bkcolor;
 	tscalar env_intensity;
@@ -120,6 +127,12 @@ tcone tcone_init (tvector3d anchor, tvector3d direction, tscalar ratio, tscalar 
 void tcone_with_coeficients (tscalar ratio2, tscalar ID, tscalar IX, tscalar DX, tscalar k, tscalar *A, tscalar *b, tscalar *C);
 void tcone_intersections (void* properties, tvector3d origin, tvector3d direction, long *count, tscalar *distances);
 tvector3d tcone_normal (void* properties, tvector3d point);
+
+// plane functions
+tplane * tplane_new();
+tplane tplane_init (tvector3d anchor, tvector3d direction);
+void tplane_intersections (void* properties, tvector3d origin, tvector3d direction, long *count, tscalar *distances);
+tvector3d tplane_normal (void* properties, tvector3d point);
 
 // scene functions
 tscene * tscene_new ();

@@ -9,6 +9,7 @@ typedef enum
 	SPHERE,
 	CYLINDER,
 	CONE,
+	PLANE,
 	/* Unknown object */
 	UNKNOWN = -1
 } eobject;

@@ -1,7 +1,7 @@
 <model>
 	<origin>
 		<X>0.0</X>
-		<Y>0.0</Y>
+		<Y>1000.0</Y>
 		<Z>-1000.0</Z>
 	</origin>
 	<window>
@@ -49,26 +49,12 @@
 		   <specular_exponent>4</specular_exponent>
 		   <color>
 			   <R>255</R>
-			   <G>255</G>
+			   <G>128</G>
 			   <B>0</B>
 			   <A>255</A>		
 		   </color>
 		   <properties>
-			   <type>cone</type>
-			   <anchor>
-				   <X>0.0</X>
-				   <Y>0.0</Y>
-				   <Z>0.0</Z>
-			   </anchor>
-			   <direction>
-				   <X>1.0</X>
-				   <Y>1.0</Y>
-				   <Z>0.0</Z>
-			   </direction>
-			   <radius>100.0</radius>
-			   <u>2.0</u>
-			   <v>1.0</v>
-			   <h1>-200.0</h1>
+			   <type>plane</type>
 		   </properties>
 	   </object>
 	</scene>
