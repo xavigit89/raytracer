@@ -28,7 +28,7 @@ tlist get_intersections (tlist objects, tvector3d origin, tvector3d direction) {
 		
 		node = node->next;
 	}
-	
+
 	return intersections;
 }
 
@@ -41,7 +41,10 @@ tvector4d get_color (tscene scn, tvector3d origin, tvector3d direction) {
 		tintersection * inter = intersections.first->value;
 		tobject * obj = inter->object;
 		tvector3d point = v_point_at (origin, direction, inter->distance);
-		tvector3d normal = (obj->normal)(obj->properties, point);
+		assert(obj);
+		assert(obj->normal);
+		assert(obj->properties);
+		tvector3d normal = (obj->normal)(obj->properties, point);		
 		tvector3d anti_direction = v_scale(direction, -1.0);
 		tvector3d light_reflex;
 		tvector3d to_light;

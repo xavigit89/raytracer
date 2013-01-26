@@ -357,7 +357,7 @@ tscene parse_tscene(xmlDocPtr doc, xmlNodePtr cur)
 	tlight *light;
 	tobject *object;
 	
-	tscene_init(&scn, (tvector4d) { 0.5, 0.5, 0.5, 1.0 }, 0.15 );
+	scn = tscene_init(DEFAULT_SCENE_BKCOLOR, DEFAULT_SCENE_ENV_INTENSITY );
 	
 	cur = cur->xmlChildrenNode;
 	

@@ -36,5 +36,4 @@ clean:
 	
 .PHONY : cleanall
 cleanall:
-	rm -f obj/*.o bin/* resources/imgs/*
-	rmdir obj bin resources/imgs
+	rm -rf obj bin resources/imgs

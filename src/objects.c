@@ -1,64 +1,106 @@
 #include <assert.h>
 #include "objects.h"
 
-tlight * tlight_new() {
-	return (tlight *) malloc(sizeof(tlight));
+tlight * tlight_new()
+{
+	
+	tlight * light = (tlight *) malloc(sizeof(tlight));
+	
+	if (light)
+	{
+		*light = tlight_init(DEFAULT_POINT, DEFAULT_LIGHT_COLOR, DEFAULT_LIGHT_INTENSITY, 1.0, 0.0, 0.0);
+	}
+	
+	return light;
 }
 
-tlight tlight_init (tvector3d anchor, tvector4d color, tscalar intensity, tscalar c1, tscalar c2, tscalar c3) {
-	return (tlight) { anchor, color, intensity, c1, c2, c3 };
+tlight tlight_init (tvector3d anchor, tvector4d color, tscalar intensity, tscalar c1, tscalar c2, tscalar c3)
+{
+	return (tlight)
+{ anchor, color, intensity, c1, c2, c3 };
 }
 
-tobject * tobject_new() {
-	return (tobject *) malloc(sizeof(tobject));
+tobject * tobject_new()
+{
+	tobject *obj  = (tobject *) malloc(sizeof(tobject));
+	
+	if (obj)
+	{
+		*obj = tobject_init(NULL, DEFAULT_OBJECT_COLOR,
+							DEFAULT_OBJECT_ENV_K, DEFAULT_OBJECT_DIFUSE_K, DEFAULT_OBJECT_SPECULAR_K, DEFAULT_OBJECT_SPECULAR_N,
+							tobject_intersections, tobject_normal, free);
+	}
+	
+	return obj;
 }
 
-tobject tobject_init (tvector4d color, tscalar env_k, tscalar difuse_k, tscalar specular_k, tscalar specular_n,
-					  intersect_fun intersections, normal_fun normal, memfree_fun free_properties) {
-	return (tobject) { NULL, color, env_k, difuse_k, specular_k, specular_n, intersections, normal, free_properties };
+tobject tobject_init (void* properties, tvector4d color, tscalar env_k, tscalar difuse_k, tscalar specular_k, tscalar specular_n,
+					  intersect_fun intersections, normal_fun normal, memfree_fun free_properties)
+{
+	return (tobject) { properties, color, env_k, difuse_k, specular_k, specular_n, intersections, normal, free_properties };
 }
 
-void tobject_destroy (void *obj) {
+void tobject_destroy (void *obj)
+{
 	tobject *o = (tobject*) obj;
 	(o->free_properties)(o->properties);
 	free(obj);
 }
 
-void tobject_intersections (void* properties, tvector3d origin, tvector3d direction, long *count, tscalar *distances) {
+void tobject_intersections (void* properties, tvector3d origin, tvector3d direction, long *count, tscalar *distances)
+{
 	*count = 0;
 }
 
-tvector3d tobject_normal (void* properties, tvector3d point) {
-	return (tvector3d) { 0.0, 0.0, 0.0 };
+tvector3d tobject_normal (void* properties, tvector3d point)
+{
+	return DEFAULT_POINT;
 }
 
-tintersection * tintersection_new(tscalar distance, tobject *object) {
+tintersection * tintersection_new(tscalar distance, tobject *object)
+{
 	tintersection * intersection = (tintersection *) malloc(sizeof(tintersection));
 	
-	if (intersection) {
-		intersection->distance = distance;
-		intersection->object = object;
+	if (intersection)
+	{
+		*intersection = tintersection_init(distance, object);
 	}
 	
 	return intersection;
 }
 
-int tintersection_compare (void *a, void *b) {
+tintersection tintersection_init(tscalar distance, tobject *object)
+{
+	return (tintersection) { distance, object };
+}
+
+int tintersection_compare (void *a, void *b)
+{
 	tscalar diff = ((tintersection *) a)->distance - ((tintersection *) b)->distance;
 	
 	return SIGN(diff);
 }
 
 // Spheres
-tsphere * tsphere_new() {
-	return (tsphere *) malloc(sizeof(tsphere));
+tsphere * tsphere_new()
+{
+	tsphere *sph = (tsphere *) malloc(sizeof(tsphere));
+	
+	if (sph)
+	{
+		*sph = tsphere_init(DEFAULT_POINT, DEFAULT_OBJECT_RADIUS);
+	}
+	
+	return sph;
 }
 
-tsphere tsphere_init(tvector3d anchor, tscalar radius) {
+tsphere tsphere_init (tvector3d anchor, tscalar radius)
+{
 	return (tsphere) { anchor, radius, radius * radius };
 }
 
-void tsphere_intersections (void* properties, tvector3d origin, tvector3d direction, long *count, tscalar *distances) {		
+void tsphere_intersections (void* properties, tvector3d origin, tvector3d direction, long *count, tscalar *distances)
+{		
 	tsphere *sph = (tsphere *) properties;
 	tvector3d from_anchor = v_sub(origin, sph->anchor);
 	tscalar b = v_dot_product(direction, from_anchor);
@@ -66,23 +108,27 @@ void tsphere_intersections (void* properties, tvector3d origin, tvector3d direct
 	tscalar d = b * b - C;
 	tscalar aux = 4.0 * d;	
 	
-	if (ZERO(aux)) {
+	if (ZERO(aux))
+	{
 		*count = 1;
 		distances[0] = -b;
 	}
-	else if (d > 0.0) {
+	else if (d > 0.0)
+	{
 		*count = 2;
 		aux = sqrtl(d);
 		
 		distances[0] = -b - aux;
 		distances[1] = -b + aux;
 	}
-	else {
+	else
+	{
 		*count = 0;
 	}
 }
 
-tvector3d tsphere_normal (void* properties, tvector3d point) {
+tvector3d tsphere_normal (void* properties, tvector3d point)
+{
 	return v_scale(v_sub(point, ((tsphere *) properties)->anchor), 1.0 / ((tsphere *) properties)->radius);
 }
 
@@ -91,7 +137,10 @@ tcylinder * tcylinder_new()
 {
 	tcylinder *cyl = (tcylinder *) malloc(sizeof(tcylinder));
 	
-	if (cyl) tcylinder_init(cyl, (tvector3d) { 0.0, 0.0, 0.0 }, (tvector3d) { 0.0, 1.0, 0.0 }, 100.0, FP_NAN, FP_NAN);
+	if (cyl)
+	{
+		*cyl = tcylinder_init(DEFAULT_POINT, DEFAULT_DIRECTION, DEFAULT_OBJECT_RADIUS, FP_NAN, FP_NAN);
+	}
 	
 	return cyl;
 }
@@ -103,7 +152,7 @@ void tcylinder_with_coeficients(tscalar radius2, tscalar ID, tscalar IX, tscalar
 	*C = (k * k) * (1 - (DX * DX)) - radius2;
 }
 
-void tcylinder_init(tcylinder *cyl, tvector3d anchor, tvector3d direction, tscalar radius, tscalar h1, tscalar h2)
+tcylinder tcylinder_init(tvector3d anchor, tvector3d direction, tscalar radius, tscalar h1, tscalar h2)
 {	
 	if (!isnanl(h1) && !isnanl(h2) && h2 < h1)
 	{
@@ -112,7 +161,7 @@ void tcylinder_init(tcylinder *cyl, tvector3d anchor, tvector3d direction, tscal
 		h2 = aux;
 	}
 	
-	*cyl = (tcylinder) { anchor, direction, radius, radius * radius, h1, h2, tcylinder_with_coeficients };
+	return (tcylinder) { anchor, direction, radius, radius * radius, h1, h2, tcylinder_with_coeficients };
 }
 
 int is_contained(tscalar lower, tscalar upper, tscalar value)
@@ -163,9 +212,33 @@ tvector3d tcylinder_normal (void* properties, tvector3d point)
     return v_scale(v_sub(point, point_projection), 1.0 / cyl->radius);
 }
 
-void tscene_init(tscene *scn, tvector4d bkcolor, tscalar env_intensity) {
-	scn->bkcolor = bkcolor;
-	scn->env_intensity = env_intensity;
-	scn->objects = tlist_init(tobject_destroy, NULL, NONREVERSE);
-	scn->lights = tlist_init(free, NULL, NONREVERSE);
+tscene * tscene_new()
+{
+	tscene *scn = (tscene *) malloc(sizeof(tscene));
+	
+	if (scn)
+	{
+		*scn = (tscene) tscene_init(DEFAULT_SCENE_BKCOLOR, DEFAULT_SCENE_ENV_INTENSITY);
+	}
+	
+	return scn;
+}
+
+tscene tscene_init(tvector4d bkcolor, tscalar env_intensity)
+{
+	return (tscene) { bkcolor, env_intensity, tlist_init(tobject_destroy, NULL, NONREVERSE), tlist_init(free, NULL, NONREVERSE) };
+}
+
+void tscene_clear (tscene *scn)
+{
+	scn->bkcolor = DEFAULT_SCENE_BKCOLOR;
+	scn->env_intensity = DEFAULT_SCENE_ENV_INTENSITY;
+	tlist_clear(&(scn->objects));
+	tlist_clear(&(scn->lights));
+}
+
+void tscene_destroy (void * p)
+{
+	tscene_clear((tscene *) p);
+	free(p);
 }

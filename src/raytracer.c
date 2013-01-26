@@ -42,23 +42,21 @@ int main(int argc, char * argv[]) {
 			printf("ERROR: no memory for frame.\n");
 		}
 		
+		tscene_clear(&scn);
+		
 		if (fra.bytes)
 		{
 			free(fra.bytes);
 			fra.bytes = NULL;
 		}
-		
-		if (scn.objects.first) tlist_clear(&scn.objects);
-		
-		if (scn.lights.first) tlist_clear(&scn.lights);
-		
+			
 		assert((!scn.objects.first));
 		assert((!scn.lights.first));
 		assert((!fra.bytes));
 	}
 	else
 	{
-		printf("Usage: test01 <image_filename>\n");
+		printf("Usage: raytracer <input_model> <output_image>\n");
 	}
 		
 	return 0;
