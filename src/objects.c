@@ -321,12 +321,10 @@ void tplane_intersections (void* properties, tvector3d origin, tvector3d directi
 	
 	if (ZERO(ND))
 	{
-		printf("Zero division");
 		*count = 0;
 	}
 	else
 	{
-		printf("Count: %ld\n", ++c);
 		distances[0] = -(pla->w + v_dot_product(origin, *((tvector3d *) properties))) / ND;
 		*count = 1;
 	}
@@ -335,6 +333,148 @@ void tplane_intersections (void* properties, tvector3d origin, tvector3d directi
 tvector3d tplane_normal (void* properties, tvector3d point)
 {
 	return *((tvector3d *) properties);
+}
+
+// polygon functions
+tpolygon * tpolygon_new()
+{
+	tpolygon *pol = (tpolygon *) malloc(sizeof(tpolygon));
+	
+	if (pol) *pol = (tpolygon) { (tplane) { 0.0, 0.0, 0.0, 0.0 }, NULL, 0, -1, -1 };
+	
+	return pol;
+}
+
+tpolygon tpolygon_init (tvector3d *points, long num_points)
+{
+	assert((points));
+	assert(num_points > 2);
+	
+	tvector3d direction = v_cross_product(v_sub(points[1], points[0]), v_sub(points[2], points[0]));
+	tvector2d *points2d = (tvector2d *) malloc(num_points * sizeof(tvector2d));
+	tplane pla = tplane_init(points[0], direction);
+	int u, v, excluded;
+	
+	excluded = (+pla.x > +pla.y) ? ((+pla.x > +pla.z) ? X : Z) : ((+pla.y > +pla.z) ? Y : Z);
+	u = (excluded == X) ? Y : X;
+	v = (excluded == Z) ? Y : Z;
+	
+	assert(u != v);
+	
+	if (points2d)
+	{
+		long i;		
+		
+		for (i = 0; i < num_points; i++)
+		{
+			points2d[i].x = (u == X) ? points[i].x : points[i].y;
+			points2d[i].y = (v == Y) ? points[i].y : points[i].z;
+		}		
+	}
+	
+	return (tpolygon) { pla, points2d, num_points, u, v };
+}
+
+void tpolygon_intersections (void* properties, tvector3d origin, tvector3d direction, long *count, tscalar *distances)
+{
+	tpolygon *pol = (tpolygon *) properties;
+	
+	tplane_intersections(&(pol->plane), origin, direction, count, distances);
+
+	if (*count > 0)
+	{
+		/*
+		 * In order to improve performance, positive distance checking is done here,
+		 * before several calculations are performed.
+		 * */
+		if (NONPOSITIVE(distances[0]))
+		{
+			*count = 0;
+			return; 
+		}
+		else
+		{
+			/* The intersection point. */
+			tvector3d p3d;
+			/* The intersection point, in dimensions (U, V). */
+			tvector2d p2d;
+			/* The polygon's points, translated by -p2d. */
+			tvector2d translated[pol->num_points];
+			/*
+			 * i: index of the actual point being analized.
+			 * j: index of the actual next point being analized.
+			 * k: counter of intersections with edges from origin
+			 * */
+			long i, j, k;
+			/*
+			 * sh: sign of actual point's Y axis coordinate.
+			 * nsh: sign of actual next point's Y axis coordinate.
+			 * shx: sign of actual point's X axis coordinate.
+			 * nshx: sign of actual next point's X axis coordinate.
+			 * */
+			int sh,nsh;
+			int shx,nshx;
+			
+			p3d = v_point_at(origin, direction, distances[0]);
+			p2d.x = (pol->u_axis == X) ? p3d.x : p3d.y;
+			p2d.y = (pol->v_axis == Y) ? p3d.y : p3d.z;
+			
+			for (i = 0; i < pol->num_points; i++)
+			{
+				translated[i].x = pol->points[i].x - p2d.x;
+				translated[i].y = pol->points[i].y - p2d.y;
+			}
+			
+			k = 0;
+			/* Starting with the last point with no additional changes
+			 * code produces 'negative' of the polygon, limited by its
+			 * minimum and maximum Y coordinate values, and its
+			 * maximum X coordinate value.*/
+			sh = SIGN(translated[0].y);			
+			for (i = 0, j = 1; i < pol->num_points; i++, j++)
+			{
+				/* The end of the array has been reached, so the next point should be the first one. */
+				if (j == pol->num_points) j = 0;
+				
+				nsh = SIGN(translated[j].y);
+
+				if (sh != nsh)
+				{
+					shx = SIGN(translated[i].x);
+					nshx = SIGN(translated[j].x);
+					
+					// If both points are located in positive X coordinates.
+					if (shx == 1 && nshx == 1)
+					{
+						k++;
+					}
+					else if (shx == 1 || nshx == 1)
+					{
+						if (POSITIVE(translated[i].x -
+									 translated[i].y * (translated[j].x - translated[i].x) /
+													   (translated[j].y - translated[i].y)))
+						{
+							k++;
+						}
+					}
+				}
+				sh = nsh;
+			}
+			
+			*count = (k & 1) ? 1 : 0;
+		}
+	}
+}
+
+tvector3d tpolygon_normal (void* properties, tvector3d point)
+{
+	return tplane_normal(&(((tpolygon *) properties)->plane), point);
+}
+
+void tpolygon_destroy (void* p)
+{	
+	free(((tpolygon *) p)->points);
+	free(p);
 }
 
 // scene functions

@@ -360,6 +360,72 @@ tplane * parse_plane(xmlDocPtr doc, xmlNodePtr cur)
 	return pla;
 }
 
+tpolygon * parse_polygon(xmlDocPtr doc, xmlNodePtr cur)
+{
+	tpolygon *pol = tpolygon_new();
+	tvector3d *points = NULL;
+
+	if (pol)
+	{		
+		cur = cur->xmlChildrenNode;
+		
+		while (cur)
+		{
+			if (!xmlStrcmp(cur->name,"num_points"))
+			{
+				parse_simple(doc, cur, "%ld", &(pol->num_points));
+			}
+			else if (!xmlStrcmp(cur->name,"points"))
+			{				
+				if (pol->num_points > 2)
+				{
+					points = (tvector3d *) malloc(pol->num_points * sizeof(tvector3d));
+					
+					if (points)
+					{
+						
+						xmlNodePtr points_cur = cur->xmlChildrenNode;
+						long i = 0;
+						
+						while (points_cur && i < pol->num_points)
+						{
+							if (!xmlStrcmp(points_cur->name,"point"))
+							{								
+								points[i++] = parse_tvector3d(doc, points_cur);
+							}
+							
+							points_cur = points_cur->next;
+						}
+						
+						pol->num_points = i;
+						
+						if (pol->num_points < 3)
+						{
+							free(points);
+							points = NULL;
+							pol->num_points = 0;
+						}
+					}
+				}
+			}
+			
+			cur = cur->next;
+		}
+		
+		if (points)
+		{			
+			*pol = tpolygon_init(points, pol->num_points);
+		}
+		else
+		{
+			free(pol);
+			pol = NULL;
+		}
+	}
+		
+	return pol;
+}
+
 void * parse_properties(xmlDocPtr doc, xmlNodePtr cur, eobject *type)
 {
 	
@@ -380,6 +446,7 @@ void * parse_properties(xmlDocPtr doc, xmlNodePtr cur, eobject *type)
 				else if (!xmlStrcmp(key,"cylinder"))	*type = CYLINDER;
 				else if (!xmlStrcmp(key,"cone"))		*type = CONE;
 				else if (!xmlStrcmp(key,"plane"))		*type = PLANE;
+				else if (!xmlStrcmp(key,"polygon"))		*type = POLYGON;
 				/** TODO: Add here other types */
 				
 				xmlFree(key);
@@ -394,6 +461,7 @@ void * parse_properties(xmlDocPtr doc, xmlNodePtr cur, eobject *type)
 	else if (*type == CYLINDER) 	properties = parse_cylinder(doc, cur);
 	else if (*type == CONE) 		properties = parse_cone(doc, cur);
 	else if (*type == PLANE) 		properties = parse_plane(doc, cur);
+	else if (*type == POLYGON) 		properties = parse_polygon(doc, cur);
 	/** TODO: Add here other types */
 	
 	return properties;
@@ -492,6 +560,30 @@ tobject* parse_tobject(xmlDocPtr doc, xmlNodePtr cur)
 						printf("\tB: %.2LF\n", pla->y);
 						printf("\tC: %.2LF\n", pla->z);
 						printf("\tD: %.2LF\n", pla->w);
+					}
+					else if (type == POLYGON)
+					{
+						object->intersections = tpolygon_intersections;
+						object->normal = tpolygon_normal;
+						object->free_properties = tpolygon_destroy;
+						
+						tpolygon *pol = (tpolygon *) object->properties;
+							
+						printf("Polygon:\n");
+						printf("\tA: %.2LF\n", pol->plane.x);
+						printf("\tB: %.2LF\n", pol->plane.y);
+						printf("\tC: %.2LF\n", pol->plane.z);
+						printf("\tD: %.2LF\n", pol->plane.w);
+						printf("\tU coordinate: %c\n", (pol->u_axis == X) ? 'X' : 'Y');
+						printf("\tV coordinate: %c\n", (pol->v_axis == Z) ? 'Z' : 'Y');
+						printf("\tNumber of points: %ld\n", pol->num_points);
+						printf("\tPoints: %ld\n", pol->num_points);
+						long i;
+						
+						for (i = 0; i < pol->num_points; i++)
+						{
+							printf("\t\t[%.2LF, %.2LF]\n", pol->points[i].x, pol->points[i].y);
+						}
 					}
 					/** TODO: Add more objects here*/
 				}

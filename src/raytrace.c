@@ -43,7 +43,7 @@ tvector4d get_color (tscene scn, tvector3d origin, tvector3d direction) {
 		tintersection * inter = intersections.first->value;
 		tobject * obj = inter->object;
 		tvector3d point = v_point_at (origin, direction, inter->distance);
-		printf("Count: %ld\n", ++count);
+
 		assert(obj);
 		assert(obj->normal);
 		assert(obj->properties);

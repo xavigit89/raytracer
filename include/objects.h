@@ -84,6 +84,14 @@ typedef tcylinder tcone;
 typedef tvector4d tplane;
 
 typedef struct {
+	tplane plane;	
+	tvector2d *points;
+	long num_points;
+	int u_axis;
+	int v_axis;
+} tpolygon;
+
+typedef struct {
 	tvector4d bkcolor;
 	tscalar env_intensity;
 	tlist objects;
@@ -133,6 +141,13 @@ tplane * tplane_new();
 tplane tplane_init (tvector3d anchor, tvector3d direction);
 void tplane_intersections (void* properties, tvector3d origin, tvector3d direction, long *count, tscalar *distances);
 tvector3d tplane_normal (void* properties, tvector3d point);
+
+// polygon functions
+tpolygon * tpolygon_new();
+tpolygon tpolygon_init (tvector3d *points, long num_points);
+void tpolygon_intersections (void* properties, tvector3d origin, tvector3d direction, long *count, tscalar *distances);
+tvector3d tpolygon_normal (void* properties, tvector3d point);
+void tpolygon_destroy (void* p);
 
 // scene functions
 tscene * tscene_new ();

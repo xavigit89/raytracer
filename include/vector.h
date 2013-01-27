@@ -28,6 +28,11 @@
  * */
 #define NEGATIVE(X) ((X) < -EPSILON)
 /**
+ * @def NONZERO(X)
+ * Determines whether or not a value X is not in the range [-EPSILON, EPSILON]
+ * */
+#define NONZERO(X) ((X) < -EPSILON || (X) > EPSILON)
+/**
  * @def NONPOSITIVE(X)
  * Determines whether or not a value X is less than or equal to EPSILON
  * */
@@ -49,6 +54,7 @@
 
 typedef long double tscalar;
 typedef tscalar* tvector;
+typedef struct { tscalar x, y; } tvector2d;
 typedef struct { tscalar x, y, z; } tvector3d;
 typedef struct { tscalar x, y, z, w; } tvector4d;
 
