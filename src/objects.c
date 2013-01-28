@@ -570,6 +570,68 @@ void tpolygon_destroy (void* p)
 	free(p);
 }
 
+// disc functions
+tdisc * tdisc_new()
+{
+	tdisc *dsc = (tdisc *) malloc(sizeof(tdisc));
+	
+	if (dsc)
+	{
+		*dsc = tdisc_init(DEFAULT_POINT, DEFAULT_DIRECTION, 0.0, DEFAULT_OBJECT_RADIUS);
+	}
+	
+	return dsc;
+}
+
+tdisc tdisc_init (tvector3d anchor, tvector3d direction, tscalar rad1, tscalar rad2)
+{
+	if (+rad1 > +rad2)
+	{
+		tscalar aux = rad1;
+		rad1 = rad2;
+		rad2 = aux;
+	}
+	
+	return (tdisc) { anchor, tplane_init(anchor, direction), +rad1, +rad2, rad1 * rad1, rad2 * rad2 };
+}
+
+void tdisc_intersections (void* properties, tvector3d origin, tvector3d direction, long *count, tscalar *distances)
+{
+	tdisc *dsc = (tdisc *) properties;
+	
+	tplane_intersections(&(dsc->plane), origin, direction, count, distances);
+
+	if (*count > 0)
+	{
+		if (NONPOSITIVE(distances[0]))
+		{
+			*count = 0;
+			return; 
+		}
+		else
+		{
+			/* The intersection point. */
+			tvector3d p;
+			/* Vector whose origin is the disc's anchor and whose end is 'p'. */
+			tvector3d ap;
+			/* The square of the distance from disc's anchor to point 'p' */
+			tscalar sqrdist;
+			
+			p = v_point_at(origin, direction, distances[0]);
+			ap = v_sub(p, dsc->anchor);
+			sqrdist = v_dot_product(ap, ap);
+			
+			
+			*count = (dsc->sqrrad1 <= sqrdist && sqrdist <= dsc->sqrrad2) ? 1 : 0;
+		}
+	}
+}
+
+tvector3d tdisc_normal (void* properties, tvector3d point)
+{
+	return *((tvector3d *) &((tdisc *) properties)->plane);
+}
+
 // scene functions
 tscene * tscene_new()
 {

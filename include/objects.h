@@ -108,6 +108,13 @@ typedef struct {
 } tpolygon;
 
 typedef struct {
+	tvector3d anchor;
+	tplane plane;
+	tscalar rad1, rad2;
+	tscalar sqrrad1, sqrrad2;
+} tdisc;
+
+typedef struct {
 	tvector4d bkcolor;
 	tscalar env_intensity;
 	tlist objects;
@@ -172,6 +179,12 @@ tpolygon tpolygon_init (tvector3d *points, long num_points);
 void tpolygon_intersections (void* properties, tvector3d origin, tvector3d direction, long *count, tscalar *distances);
 tvector3d tpolygon_normal (void* properties, tvector3d point);
 void tpolygon_destroy (void* p);
+
+// disc functions
+tdisc * tdisc_new();
+tdisc tdisc_init (tvector3d anchor, tvector3d direction, tscalar rad1, tscalar rad2);
+void tdisc_intersections (void* properties, tvector3d origin, tvector3d direction, long *count, tscalar *distances);
+tvector3d tdisc_normal (void* properties, tvector3d point);
 
 // scene functions
 tscene * tscene_new ();

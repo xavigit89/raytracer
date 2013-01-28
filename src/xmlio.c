@@ -360,6 +360,45 @@ tplane * parse_plane(xmlDocPtr doc, xmlNodePtr cur)
 	return pla;
 }
 
+tdisc * parse_disc(xmlDocPtr doc, xmlNodePtr cur)
+{
+	tdisc *dsc = tdisc_new();
+	tvector3d direction = DEFAULT_DIRECTION;
+	
+	if (dsc)
+	{
+		
+		cur = cur->xmlChildrenNode;
+		
+		while (cur)
+		{
+			if (!xmlStrcmp(cur->name,"anchor"))
+			{
+				dsc->anchor = parse_tvector3d(doc,cur);
+			}
+			else if (!xmlStrcmp(cur->name,"direction"))
+			{
+				// The init process makes the normalization process
+				direction = parse_tvector3d(doc,cur);
+			}
+			else if (!xmlStrcmp(cur->name,"radius1"))
+			{
+				 parse_simple(doc,cur,"%LF",&(dsc->rad1));
+			}
+			else if (!xmlStrcmp(cur->name,"radius2"))
+			{
+				 parse_simple(doc,cur,"%LF",&(dsc->rad2));
+			}
+			
+			cur = cur->next;
+		}
+		
+		*dsc = tdisc_init(dsc->anchor, direction, dsc->rad1, dsc->rad2);
+	}
+		
+	return dsc;
+}
+
 ttriangle * parse_triangle(xmlDocPtr doc, xmlNodePtr cur)
 {
 	ttriangle *tri = ttriangle_new();
@@ -486,6 +525,7 @@ void * parse_properties(xmlDocPtr doc, xmlNodePtr cur, eobject *type)
 				else if (!xmlStrcmp(key,"plane"))		*type = PLANE;
 				else if (!xmlStrcmp(key,"triangle"))	*type = TRIANGLE;
 				else if (!xmlStrcmp(key,"polygon"))		*type = POLYGON;
+				else if (!xmlStrcmp(key,"disc"))		*type = DISC;
 				/** TODO: Add here other types */
 				
 				xmlFree(key);
@@ -502,6 +542,7 @@ void * parse_properties(xmlDocPtr doc, xmlNodePtr cur, eobject *type)
 	else if (*type == PLANE) 		properties = parse_plane(doc, cur);
 	else if (*type == TRIANGLE) 	properties = parse_triangle(doc, cur);
 	else if (*type == POLYGON) 		properties = parse_polygon(doc, cur);
+	else if (*type == DISC) 		properties = parse_disc(doc, cur);
 	/** TODO: Add here other types */
 	
 	return properties;
@@ -650,6 +691,22 @@ tobject* parse_tobject(xmlDocPtr doc, xmlNodePtr cur)
 						{
 							printf("\t\t[%.2LF, %.2LF]\n", pol->points[i].x, pol->points[i].y);
 						}
+					}
+					else if (type == DISC)
+					{
+						object->intersections = tdisc_intersections;
+						object->normal = tdisc_normal;
+						object->free_properties = free;
+						
+						tdisc *dsc = (tdisc *) object->properties;
+							
+						printf("Disc:\n");
+						printf("\tAnchor: [%.2LF, %.2LF, %.2LF]\n", dsc->anchor.x, dsc->anchor.y, dsc->anchor.z);
+						printf("\tPlane: [%.2LF, %.2LF, %.2LF, %.2LF]\n", dsc->plane.x, dsc->plane.y, dsc->plane.z, dsc->plane.w);
+						printf("\tRadius 1: %.2LF\n", dsc->rad1);
+						printf("\tRadius 1 (square): %.2LF\n", dsc->sqrrad1);						
+						printf("\tRadius 2: %.2LF\n", dsc->rad2);
+						printf("\tRadius 2 (square): %.2LF\n", dsc->sqrrad2);
 					}
 					/** TODO: Add more objects here*/
 				}

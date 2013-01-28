@@ -12,6 +12,7 @@ typedef enum
 	PLANE,
 	TRIANGLE,
 	POLYGON,
+	DISC,
 	/* Unknown object */
 	UNKNOWN = -1
 } eobject;
