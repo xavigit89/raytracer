@@ -186,9 +186,6 @@ void tcylinder_intersections (void* properties, tvector3d origin, tvector3d dire
 	
 	if (s == 1)
 	{
-		static long count2 = 0;
-		printf("Two: %ld\n", ++count2);
-
 		sqrt_d = sqrtl(d);
 		distances[0] = (-b - sqrt_d) / A;
 		distances[1] = (-b + sqrt_d) / A;
@@ -196,10 +193,7 @@ void tcylinder_intersections (void* properties, tvector3d origin, tvector3d dire
 		*count = 2;
 	}
 	else if (s == 0)
-	{
-		static long count1 = 0;
-		printf("One: %ld\n", ++count1);
-		
+	{	
 		distances[0] = -b / A;
 		*count = 1;
 	}
@@ -310,6 +304,11 @@ tplane tplane_init (tvector3d anchor, tvector3d direction)
 	tvector3d normalized = v_normalize(direction, NULL);
 	tscalar d = -v_dot_product(anchor, normalized);
 	return (tplane) { normalized.x, normalized.y, normalized.z, d};
+}
+
+int tplane_point_side (tplane pla, tvector3d point)
+{
+	return SIGN(v_dot_product(*((tvector3d *) &pla), point) + pla.w);
 }
 
 void tplane_intersections (void* properties, tvector3d origin, tvector3d direction, long *count, tscalar *distances)
@@ -620,8 +619,7 @@ void tdisc_intersections (void* properties, tvector3d origin, tvector3d directio
 			p = v_point_at(origin, direction, distances[0]);
 			ap = v_sub(p, dsc->anchor);
 			sqrdist = v_dot_product(ap, ap);
-			
-			
+						
 			*count = (dsc->sqrrad1 <= sqrdist && sqrdist <= dsc->sqrrad2) ? 1 : 0;
 		}
 	}
@@ -630,6 +628,70 @@ void tdisc_intersections (void* properties, tvector3d origin, tvector3d directio
 tvector3d tdisc_normal (void* properties, tvector3d point)
 {
 	return *((tvector3d *) &((tdisc *) properties)->plane);
+}
+
+// ellipse functions
+tellipse * tellipse_new()
+{
+	tellipse *elp = (tellipse *) malloc(sizeof(tellipse));
+	
+	if (elp)
+	{
+		*elp = tellipse_init(DEFAULT_POINT, DEFAULT_POINT, DEFAULT_DIRECTION, 0.0, DEFAULT_OBJECT_RADIUS);
+	}
+	
+	return elp;
+}
+
+tellipse tellipse_init (tvector3d focus1, tvector3d focus2, tvector3d direction, tscalar k1, tscalar k2)
+{
+	if (+k1 > +k2)
+	{
+		tscalar aux = k1;
+		k1 = k2;
+		k2 = aux;
+	}
+	// TODO: Adjust focus2 to ensure it lies in the same plane as focus1 with the given normal ('direction')
+	return (tellipse) { focus1, focus2, tplane_init(focus1, direction), +k1, +k2, k1 * k1, k2 * k2 };
+}
+
+void tellipse_intersections (void* properties, tvector3d origin, tvector3d direction, long *count, tscalar *distances)
+{
+	tellipse *elp = (tellipse *) properties;
+	
+	tplane_intersections(&(elp->plane), origin, direction, count, distances);
+
+	if (*count > 0)
+	{
+		if (NONPOSITIVE(distances[0]))
+		{
+			*count = 0;
+			return; 
+		}
+		else
+		{
+			/* The intersection point. */
+			tvector3d p;
+			/* Vector whose origin is the ellipse's focus1 and whose end is 'p'. */
+			tvector3d f1p;
+			/* Vector whose origin is the ellipse's focus2 and whose end is 'p'. */
+			tvector3d f2p;
+			/* The sum of the square of the distances from ellipse's focuses to point 'p' */
+			tscalar dist;
+			
+			p = v_point_at(origin, direction, distances[0]);
+			f1p = v_sub(p, elp->focus1);
+			f2p = v_sub(p, elp->focus2);
+			dist = v_norm(f1p) +  v_norm(f2p);
+						
+			*count = (elp->k1 <= dist && dist <= elp->k2) ? 1 : 0;
+		}
+	}
+}
+
+tvector3d tellipse_normal (void* properties, tvector3d point)
+{
+	return *((tvector3d *) &((tellipse *) properties)->plane);
 }
 
 // scene functions

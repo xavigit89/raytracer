@@ -360,6 +360,49 @@ tplane * parse_plane(xmlDocPtr doc, xmlNodePtr cur)
 	return pla;
 }
 
+tellipse * parse_ellipse(xmlDocPtr doc, xmlNodePtr cur)
+{
+	tellipse *elp = tellipse_new();
+	tvector3d direction = DEFAULT_DIRECTION;
+	
+	if (elp)
+	{
+		
+		cur = cur->xmlChildrenNode;
+		
+		while (cur)
+		{
+			if (!xmlStrcmp(cur->name,"focus1"))
+			{
+				elp->focus1 = parse_tvector3d(doc,cur);
+			}
+			else if (!xmlStrcmp(cur->name,"focus2"))
+			{
+				elp->focus2 = parse_tvector3d(doc,cur);
+			}
+			else if (!xmlStrcmp(cur->name,"direction"))
+			{
+				// The init process makes the normalization process
+				direction = parse_tvector3d(doc,cur);
+			}
+			else if (!xmlStrcmp(cur->name,"k1"))
+			{
+				 parse_simple(doc,cur,"%LF",&(elp->k1));
+			}
+			else if (!xmlStrcmp(cur->name,"k2"))
+			{
+				 parse_simple(doc,cur,"%LF",&(elp->k2));
+			}
+			
+			cur = cur->next;
+		}
+		
+		*elp = tellipse_init(elp->focus1, elp->focus2, direction, elp->k1, elp->k2);
+	}
+		
+	return elp;
+}
+
 tdisc * parse_disc(xmlDocPtr doc, xmlNodePtr cur)
 {
 	tdisc *dsc = tdisc_new();
@@ -526,6 +569,7 @@ void * parse_properties(xmlDocPtr doc, xmlNodePtr cur, eobject *type)
 				else if (!xmlStrcmp(key,"triangle"))	*type = TRIANGLE;
 				else if (!xmlStrcmp(key,"polygon"))		*type = POLYGON;
 				else if (!xmlStrcmp(key,"disc"))		*type = DISC;
+				else if (!xmlStrcmp(key,"ellipse"))		*type = ELLIPSE;
 				/** TODO: Add here other types */
 				
 				xmlFree(key);
@@ -543,6 +587,7 @@ void * parse_properties(xmlDocPtr doc, xmlNodePtr cur, eobject *type)
 	else if (*type == TRIANGLE) 	properties = parse_triangle(doc, cur);
 	else if (*type == POLYGON) 		properties = parse_polygon(doc, cur);
 	else if (*type == DISC) 		properties = parse_disc(doc, cur);
+	else if (*type == ELLIPSE) 		properties = parse_ellipse(doc, cur);
 	/** TODO: Add here other types */
 	
 	return properties;
@@ -707,6 +752,23 @@ tobject* parse_tobject(xmlDocPtr doc, xmlNodePtr cur)
 						printf("\tRadius 1 (square): %.2LF\n", dsc->sqrrad1);						
 						printf("\tRadius 2: %.2LF\n", dsc->rad2);
 						printf("\tRadius 2 (square): %.2LF\n", dsc->sqrrad2);
+					}
+					else if (type == ELLIPSE)
+					{
+						object->intersections = tellipse_intersections;
+						object->normal = tellipse_normal;
+						object->free_properties = free;
+						
+						tellipse *elp = (tellipse *) object->properties;
+							
+						printf("ellipse:\n");
+						printf("\tFocus1: [%.2LF, %.2LF, %.2LF]\n", elp->focus1.x, elp->focus1.y, elp->focus1.z);
+						printf("\tFocus2: [%.2LF, %.2LF, %.2LF]\n", elp->focus2.x, elp->focus2.y, elp->focus2.z);
+						printf("\tPlane: [%.2LF, %.2LF, %.2LF, %.2LF]\n", elp->plane.x, elp->plane.y, elp->plane.z, elp->plane.w);
+						printf("\tK 1: %.2LF\n", elp->k1);
+						printf("\tK 1 (square): %.2LF\n", elp->sqrk1);						
+						printf("\tK 2: %.2LF\n", elp->k2);
+						printf("\tK 2 (square): %.2LF\n", elp->sqrk2);
 					}
 					/** TODO: Add more objects here*/
 				}

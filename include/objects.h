@@ -26,6 +26,10 @@
 #define DEFAULT_OBJECT_RADIUS 100.0
 #define DEFAULT_OBJECT_RATIO 1.0
 
+#define SGN_LESS_THAN -1
+#define SGN_EQUAL 0
+#define SGN_GREATHER_THAN 1
+
 typedef enum {
 	IM_BARYCENTRIC_COORDS,
 	IM_SAME_SIDE,	
@@ -115,6 +119,13 @@ typedef struct {
 } tdisc;
 
 typedef struct {
+	tvector3d focus1, focus2;
+	tplane plane;
+	tscalar k1, k2;
+	tscalar sqrk1, sqrk2;
+} tellipse;
+
+typedef struct {
 	tvector4d bkcolor;
 	tscalar env_intensity;
 	tlist objects;
@@ -162,6 +173,7 @@ tvector3d tcone_normal (void* properties, tvector3d point);
 // plane functions
 tplane * tplane_new();
 tplane tplane_init (tvector3d anchor, tvector3d direction);
+int tplane_point_side (tplane pla, tvector3d point);
 void tplane_intersections (void* properties, tvector3d origin, tvector3d direction, long *count, tscalar *distances);
 tvector3d tplane_normal (void* properties, tvector3d point);
 
@@ -185,6 +197,12 @@ tdisc * tdisc_new();
 tdisc tdisc_init (tvector3d anchor, tvector3d direction, tscalar rad1, tscalar rad2);
 void tdisc_intersections (void* properties, tvector3d origin, tvector3d direction, long *count, tscalar *distances);
 tvector3d tdisc_normal (void* properties, tvector3d point);
+
+// ellipse functions
+tellipse * tellipse_new();
+tellipse tellipse_init (tvector3d focus1, tvector3d focus2, tvector3d direction, tscalar k1, tscalar k2);
+void tellipse_intersections (void* properties, tvector3d origin, tvector3d direction, long *count, tscalar *distances);
+tvector3d tellipse_normal (void* properties, tvector3d point);
 
 // scene functions
 tscene * tscene_new ();
