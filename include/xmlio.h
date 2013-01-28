@@ -10,6 +10,7 @@ typedef enum
 	CYLINDER,
 	CONE,
 	PLANE,
+	TRIANGLE,
 	POLYGON,
 	/* Unknown object */
 	UNKNOWN = -1

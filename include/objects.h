@@ -26,9 +26,15 @@
 #define DEFAULT_OBJECT_RADIUS 100.0
 #define DEFAULT_OBJECT_RATIO 1.0
 
+typedef enum {
+	IM_BARYCENTRIC_COORDS,
+	IM_SAME_SIDE,	
+	IM_UNKNOWN = -1
+} einside_method;
 
 typedef void (*intersect_fun) (void *, tvector3d, tvector3d, long *, tscalar *);
 typedef tvector3d (*normal_fun) (void *, tvector3d);
+typedef int (*inside_method_f) (void *, tvector3d);
 
 typedef struct {
 	long width,height;
@@ -84,7 +90,17 @@ typedef tcylinder tcone;
 typedef tvector4d tplane;
 
 typedef struct {
-	tplane plane;	
+	tplane plane;
+	tvector3d a, b, c;
+	tvector3d ab;
+	tvector3d ac;
+	tvector3d bc;
+	tscalar inv_denom;
+	inside_method_f method;
+} ttriangle;
+
+typedef struct {
+	tplane plane;
 	tvector2d *points;
 	long num_points;
 	int u_axis;
@@ -141,6 +157,14 @@ tplane * tplane_new();
 tplane tplane_init (tvector3d anchor, tvector3d direction);
 void tplane_intersections (void* properties, tvector3d origin, tvector3d direction, long *count, tscalar *distances);
 tvector3d tplane_normal (void* properties, tvector3d point);
+
+// triangle functions
+ttriangle * ttriangle_new();
+ttriangle ttriangle_init (tvector3d a, tvector3d b, tvector3d c, einside_method method);
+int ttriangle_inside_same_side_method(void *properties, tvector3d p);
+int ttriangle_inside_barycentric_coords_method(void *properties, tvector3d p);
+void ttriangle_intersections (void* properties, tvector3d origin, tvector3d direction, long *count, tscalar *distances);
+tvector3d ttriangle_normal (void* properties, tvector3d point);
 
 // polygon functions
 tpolygon * tpolygon_new();

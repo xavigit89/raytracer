@@ -4,6 +4,10 @@ int is_contained(tscalar lower, tscalar upper, tscalar value) {
 	return (lower <= value && value <= upper);
 }
 
+int v_same_side (tvector3d p1, tvector3d p2, tvector3d a, tvector3d ab) {
+	return NONNEGATIVE(v_dot_product(v_cross_product(ab, v_sub(p1, a)), v_cross_product(ab, v_sub(p2, a))));
+}
+
 tvector3d v_from_values (tscalar x, tscalar y, tscalar z) {
 	return (tvector3d) { x, y, z};
 }

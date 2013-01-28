@@ -335,6 +335,99 @@ tvector3d tplane_normal (void* properties, tvector3d point)
 	return *((tvector3d *) properties);
 }
 
+// triangle functions
+ttriangle * ttriangle_new()
+{
+	ttriangle *tri = (ttriangle *) malloc(sizeof(ttriangle));
+	
+	if (tri) *tri = (ttriangle) { (tplane) { 0.0, 0.0, 0.0, 0.0 },
+								  (tvector3d) { 0.0, 0.0, 0.0 },
+								  (tvector3d) { 0.0, 0.0, 0.0 },
+								  (tvector3d) { 0.0, 0.0, 0.0 },
+								  (tvector3d) { 0.0, 0.0, 0.0 },
+								  (tvector3d) { 0.0, 0.0, 0.0 },
+								  (tvector3d) { 0.0, 0.0, 0.0 } };
+	
+	return tri;
+}
+
+ttriangle ttriangle_init (tvector3d a, tvector3d b, tvector3d c, einside_method method)
+{
+	ttriangle tri;
+	
+	tri.a = a;
+	tri.b = b;
+	tri.c = c;
+	tri.ab = v_sub(b, a);
+	tri.ac = v_sub(c, a);
+	
+	tri.plane = tplane_init(a, v_cross_product(tri.ab, tri.ac));
+	
+	if (method == IM_SAME_SIDE)
+	{
+		tri.bc = v_sub(c, b);
+		tri.method = ttriangle_inside_same_side_method;
+	}
+	else
+	{
+		tri.inv_denom = 1.0 / (tri.ac.x * tri.ab.y - tri.ac.y * tri.ab.x);
+		tri.method = ttriangle_inside_barycentric_coords_method;
+	}	
+	
+	return tri;
+}
+
+int ttriangle_inside_same_side_method(void *properties, tvector3d p)
+{
+	ttriangle *tri = (ttriangle *) properties;
+	return v_same_side(p, tri->a, tri->b, tri->bc) &&
+		   v_same_side(p, tri->b, tri->a, tri->ac) &&
+		   v_same_side(p, tri->c, tri->a, tri->ab);
+}
+
+int ttriangle_inside_barycentric_coords_method(void *properties, tvector3d p)
+{
+	ttriangle *tri = (ttriangle *) properties;
+	tvector3d ap = v_sub(p, tri->a);
+	tscalar u = (tri->ac.x * ap.y - tri->ac.y * ap.x) * tri->inv_denom;
+	tscalar v = (ap.x * tri->ab.y - ap.y * tri->ab.x) * tri->inv_denom;
+	tscalar diff = u + v - 1.0;
+	
+	return NONNEGATIVE(u) && NONNEGATIVE(v) && NONPOSITIVE(diff);
+}
+
+void ttriangle_intersections (void* properties, tvector3d origin, tvector3d direction, long *count, tscalar *distances)
+{
+	ttriangle *tri = (ttriangle *) properties;
+	
+	tplane_intersections(&(tri->plane), origin, direction, count, distances);
+
+	if (*count > 0)
+	{
+		if (NONPOSITIVE(distances[0]))
+		{
+			*count = 0;
+			return; 
+		}
+		else
+		{
+			/* The intersection point. */
+			tvector3d p;
+			
+			p = v_point_at(origin, direction, distances[0]);
+						
+			/*
+			 * Using the "same side" method to determine wheter or not the point is inside the triangle.
+			 * */
+			*count = (tri->method (properties, p)) ? 1 : 0;
+		}
+	}
+}
+tvector3d ttriangle_normal (void* properties, tvector3d point)
+{
+	return *((tvector3d *) &((ttriangle *) properties)->plane);
+}
+
 // polygon functions
 tpolygon * tpolygon_new()
 {

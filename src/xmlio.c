@@ -360,6 +360,44 @@ tplane * parse_plane(xmlDocPtr doc, xmlNodePtr cur)
 	return pla;
 }
 
+ttriangle * parse_triangle(xmlDocPtr doc, xmlNodePtr cur)
+{
+	ttriangle *tri = ttriangle_new();
+	einside_method method = IM_BARYCENTRIC_COORDS;
+	
+	if (tri)
+	{
+		
+		cur = cur->xmlChildrenNode;
+		
+		while (cur)
+		{
+			if (!xmlStrcmp(cur->name,"a"))
+			{
+				tri->a = parse_tvector3d(doc,cur);
+			}
+			else if (!xmlStrcmp(cur->name,"b"))
+			{
+				tri->b = parse_tvector3d(doc,cur);
+			}
+			else if (!xmlStrcmp(cur->name,"c"))
+			{
+				tri->c = parse_tvector3d(doc,cur);
+			}
+			else if (!xmlStrcmp(cur->name,"method"))
+			{
+				parse_simple(doc,cur,"%d",&method);
+			}
+			
+			cur = cur->next;
+		}
+		
+		*tri = ttriangle_init(tri->a, tri->b, tri->c, method);
+	}
+		
+	return tri;
+}
+
 tpolygon * parse_polygon(xmlDocPtr doc, xmlNodePtr cur)
 {
 	tpolygon *pol = tpolygon_new();
@@ -446,6 +484,7 @@ void * parse_properties(xmlDocPtr doc, xmlNodePtr cur, eobject *type)
 				else if (!xmlStrcmp(key,"cylinder"))	*type = CYLINDER;
 				else if (!xmlStrcmp(key,"cone"))		*type = CONE;
 				else if (!xmlStrcmp(key,"plane"))		*type = PLANE;
+				else if (!xmlStrcmp(key,"triangle"))	*type = TRIANGLE;
 				else if (!xmlStrcmp(key,"polygon"))		*type = POLYGON;
 				/** TODO: Add here other types */
 				
@@ -461,6 +500,7 @@ void * parse_properties(xmlDocPtr doc, xmlNodePtr cur, eobject *type)
 	else if (*type == CYLINDER) 	properties = parse_cylinder(doc, cur);
 	else if (*type == CONE) 		properties = parse_cone(doc, cur);
 	else if (*type == PLANE) 		properties = parse_plane(doc, cur);
+	else if (*type == TRIANGLE) 	properties = parse_triangle(doc, cur);
 	else if (*type == POLYGON) 		properties = parse_polygon(doc, cur);
 	/** TODO: Add here other types */
 	
@@ -561,6 +601,32 @@ tobject* parse_tobject(xmlDocPtr doc, xmlNodePtr cur)
 						printf("\tC: %.2LF\n", pla->z);
 						printf("\tD: %.2LF\n", pla->w);
 					}
+					else if (type == TRIANGLE)
+					{
+						object->intersections = ttriangle_intersections;
+						object->normal = ttriangle_normal;
+						object->free_properties = free;
+						
+						ttriangle *tri = (ttriangle *) object->properties;
+							
+						printf("triangle:\n");
+						printf("\tPlane: [%.2LF, %.2LF, %.2LF, %.2LF]\n", tri->plane.x, tri->plane.y, tri->plane.z, tri->plane.w);
+						printf("\tA: [%.2LF, %.2LF, %.2LF]\n", tri->a.x, tri->a.y, tri->a.z);
+						printf("\tB: [%.2LF, %.2LF, %.2LF]\n", tri->b.x, tri->b.y, tri->b.z);
+						printf("\tC: [%.2LF, %.2LF, %.2LF]\n", tri->c.x, tri->c.y, tri->c.z);
+						printf("\tVector AB: [%.2LF, %.2LF, %.2LF]\n", tri->ab.x, tri->ab.y, tri->ab.z);
+						printf("\tVector AC: [%.2LF, %.2LF, %.2LF]\n", tri->ac.x, tri->ac.y, tri->ac.z);
+						if (tri->method == ttriangle_inside_same_side_method)
+						{							
+							printf("\tVector BC: [%.2LF, %.2LF, %.2LF]\n", tri->bc.x, tri->bc.y, tri->bc.z);
+							printf("\tMethod: Same side\n");
+						}
+						else
+						{
+							printf("\tInverse denominator: %.2LF\n", tri->inv_denom);
+							printf("\tMethod: Barycentric coordinates system\n");
+						}
+					}
 					else if (type == POLYGON)
 					{
 						object->intersections = tpolygon_intersections;
@@ -570,10 +636,10 @@ tobject* parse_tobject(xmlDocPtr doc, xmlNodePtr cur)
 						tpolygon *pol = (tpolygon *) object->properties;
 							
 						printf("Polygon:\n");
-						printf("\tA: %.2LF\n", pol->plane.x);
-						printf("\tB: %.2LF\n", pol->plane.y);
-						printf("\tC: %.2LF\n", pol->plane.z);
-						printf("\tD: %.2LF\n", pol->plane.w);
+						printf("\tPlane: [%.2LF, %.2LF, %.2LF, %.2LF]\n", pol->plane.x,
+																		  pol->plane.y,
+																		  pol->plane.z,
+																		  pol->plane.w);
 						printf("\tU coordinate: %c\n", (pol->u_axis == X) ? 'X' : 'Y');
 						printf("\tV coordinate: %c\n", (pol->v_axis == Z) ? 'Z' : 'Y');
 						printf("\tNumber of points: %ld\n", pol->num_points);
