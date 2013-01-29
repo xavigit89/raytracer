@@ -15,8 +15,22 @@ tlight * tlight_new()
 
 tlight tlight_init (tvector3d anchor, tvector4d color, tscalar intensity, tscalar c1, tscalar c2, tscalar c3)
 {
-	return (tlight)
-{ anchor, color, intensity, c1, c2, c3 };
+	return (tlight) { anchor, color, intensity, c1, c2, c3 };
+}
+
+// tcutplane functions
+tcutplane * tcutplane_new()
+{
+	tcutplane *cplane = (tcutplane *) malloc(sizeof(tcutplane));
+	
+	if (cplane) *cplane = tcutplane_init(NULL, 0);
+	
+	return cplane;
+}
+
+tcutplane tcutplane_init (tplane *plane, int side)
+{
+	return (tcutplane) { plane, side };
 }
 
 tobject * tobject_new()
@@ -36,13 +50,14 @@ tobject * tobject_new()
 tobject tobject_init (void* properties, tvector4d color, tscalar env_k, tscalar difuse_k, tscalar specular_k, tscalar specular_n,
 					  intersect_fun intersections, normal_fun normal, memfree_fun free_properties)
 {
-	return (tobject) { properties, color, env_k, difuse_k, specular_k, specular_n, intersections, normal, free_properties };
+	return (tobject) { properties, color, env_k, difuse_k, specular_k, specular_n, tlist_init(free, NULL, NONREVERSE), intersections, normal, free_properties };
 }
 
 void tobject_destroy (void *obj)
 {
 	tobject *o = (tobject*) obj;
 	(o->free_properties)(o->properties);
+	tlist_clear(&o->planes);
 	free(obj);
 }
 
@@ -699,17 +714,14 @@ tscene * tscene_new()
 {
 	tscene *scn = (tscene *) malloc(sizeof(tscene));
 	
-	if (scn)
-	{
-		*scn = (tscene) tscene_init(DEFAULT_SCENE_BKCOLOR, DEFAULT_SCENE_ENV_INTENSITY);
-	}
+	if (scn) *scn = (tscene) tscene_init(DEFAULT_SCENE_BKCOLOR, DEFAULT_SCENE_ENV_INTENSITY);
 	
 	return scn;
 }
 
 tscene tscene_init(tvector4d bkcolor, tscalar env_intensity)
 {
-	return (tscene) { bkcolor, env_intensity, tlist_init(tobject_destroy, NULL, NONREVERSE), tlist_init(free, NULL, NONREVERSE) };
+	return (tscene) { bkcolor, env_intensity, tlist_init(tobject_destroy, NULL, NONREVERSE), tlist_init(free, NULL, NONREVERSE), tlist_init(free, NULL, NONREVERSE) };
 }
 
 void tscene_clear (tscene *scn)
@@ -718,6 +730,7 @@ void tscene_clear (tscene *scn)
 	scn->env_intensity = DEFAULT_SCENE_ENV_INTENSITY;
 	tlist_clear(&(scn->objects));
 	tlist_clear(&(scn->lights));
+	tlist_clear(&(scn->planes));
 }
 
 void tscene_destroy (void * p)

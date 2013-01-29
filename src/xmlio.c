@@ -593,9 +593,16 @@ void * parse_properties(xmlDocPtr doc, xmlNodePtr cur, eobject *type)
 	return properties;
 }
 
-tobject* parse_tobject(xmlDocPtr doc, xmlNodePtr cur)
+tcutplane *parse_cutplane(xmlDocPtr doc, xmlNodePtr cur, tlist *planes)
+{
+	/** TODO implement cut planes' parsing */
+	return NULL;
+}
+
+tobject* parse_tobject(xmlDocPtr doc, xmlNodePtr cur, tscene *scn)
 {
 	tobject *object = tobject_new();
+	tcutplane *cplane = NULL;
 	
 	if (object)
 	{	
@@ -622,6 +629,15 @@ tobject* parse_tobject(xmlDocPtr doc, xmlNodePtr cur)
 			else if (!xmlStrcmp(cur->name, "specular_exponent"))
 			{
 				parse_simple(doc, cur, "%LF", &object->specular_n);
+			}
+			else if (!xmlStrcmp(cur->name, "plane"))
+			{
+				cplane = parse_cutplane(doc, cur, &scn->planes);
+				
+				if (cplane)
+				{
+					tlist_insert_last(&object->planes, cplane);
+				}
 			}
 			else if (!xmlStrcmp(cur->name, "properties"))
 			{
@@ -797,6 +813,7 @@ tscene parse_tscene(xmlDocPtr doc, xmlNodePtr cur)
 	tscene scn;
 	tlight *light;
 	tobject *object;
+	tplane *plane;
 	
 	scn = tscene_init(DEFAULT_SCENE_BKCOLOR, DEFAULT_SCENE_ENV_INTENSITY );
 	
@@ -827,7 +844,7 @@ tscene parse_tscene(xmlDocPtr doc, xmlNodePtr cur)
 		}
 		else if (!xmlStrcmp(cur->name,"object"))
 		{
-			object = parse_tobject(doc, cur);
+			object = parse_tobject(doc, cur, &scn);
 			
 			if (object)
 			{
@@ -838,6 +855,20 @@ tscene parse_tscene(xmlDocPtr doc, xmlNodePtr cur)
 				printf("\tdifuse coeficient: %.2LF\n", object->difuse_k);
 				printf("\tspecular coeficient: %.2LF\n", object->specular_k);
 				printf("\tspecular exponent: %.2LF\n", object->specular_n);
+			}
+		}
+		else if (!xmlStrcmp(cur->name,"plane"))
+		{
+			plane = parse_plane(doc, cur);
+			
+			if (plane)
+			{
+				tlist_insert_first(&scn.planes, plane);
+				printf("Plane %ld:\n", scn.planes.size);
+				printf("\tA = %.2LF\n", plane->x);
+				printf("\tB = %.2LF\n", plane->y);
+				printf("\tC = %.2LF\n", plane->z);
+				printf("\tD = %.2LF\n", plane->w);
 			}
 		}
 		

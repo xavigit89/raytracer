@@ -28,6 +28,7 @@ twindow parse_twindow(xmlDocPtr doc, xmlNodePtr cur);
 tframe parse_tframe(xmlDocPtr doc, xmlNodePtr cur);
 tlight* parse_tlight(xmlDocPtr doc, xmlNodePtr cur);
 void * parse_properties(xmlDocPtr doc, xmlNodePtr cur, eobject *type);
-tobject* parse_tobject(xmlDocPtr doc, xmlNodePtr cur);
+tcutplane *parse_cutplane(xmlDocPtr doc, xmlNodePtr cur, tlist *planes);
+tobject* parse_tobject(xmlDocPtr doc, xmlNodePtr cur, tscene *scn);
 tscene parse_tscene(xmlDocPtr doc, xmlNodePtr cur);
 int parse_model(const char *docname, tvector3d *origin, twindow *wnd, tframe *fra, tscene *scn);

@@ -56,23 +56,6 @@ typedef struct {
 	tscalar intensity, c1, c2, c3;
 } tlight;
 
-typedef struct stobject {
-	void* properties;
-	tvector4d color;
-	tscalar env_k;
-	tscalar difuse_k;
-	tscalar specular_k;	
-	tscalar specular_n;
-	intersect_fun intersections;
-	normal_fun normal;
-	memfree_fun free_properties;
-} tobject;
-
-typedef struct {
-	tscalar distance;
-	tobject * object;
-} tintersection;
-
 typedef struct {
 	tvector3d anchor;
 	tscalar radius;
@@ -126,15 +109,44 @@ typedef struct {
 } tellipse;
 
 typedef struct {
+	tplane *plane;
+	int side;
+} tcutplane;
+
+typedef struct stobject {
+	void* properties;
+	tvector4d color;
+	tscalar env_k;
+	tscalar difuse_k;
+	tscalar specular_k;	
+	tscalar specular_n;
+	tlist planes;
+	// functions
+	intersect_fun intersections;
+	normal_fun normal;
+	memfree_fun free_properties;
+} tobject;
+
+typedef struct {
+	tscalar distance;
+	tobject * object;
+} tintersection;
+
+typedef struct {
 	tvector4d bkcolor;
 	tscalar env_intensity;
 	tlist objects;
 	tlist lights;
+	tlist planes;
 } tscene;
 
 // tlight functions
 tlight * tlight_new();
 tlight tlight_init (tvector3d anchor, tvector4d color, tscalar intensity, tscalar c1, tscalar c2, tscalar c3);
+
+// tcutplane functions
+tcutplane * tcutplane_new();
+tcutplane tcutplane_init (tplane *plane, int side);
 
 // tobject functions
 tobject * tobject_new();
